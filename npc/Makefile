@@ -17,7 +17,7 @@ sim:
 	@echo "-- VERILATE & BUILD --------"
 	$(VERILATOR) $(VFLAGS) $(SOURCES) $(SIM_SRC)
 	@echo "-- RUN ---------------------"
-	obj_dir/$(VTOP)
+	obj_dir/Vexample
 	@echo "-- DONE --------------------"
 
 clean:
