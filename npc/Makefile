@@ -6,8 +6,8 @@ SOURCES=$(wildcard vsrc/*.v)
 SIM_SRC=$(wildcard csrc/*_main.cpp)
 
 #create top module
-TOP=$(patsubst %.v,%,$(SOURCES))
-VTOP=$(patsubst %,V%,$(TOP))
+#TOP=$(patsubst %.v,%,$(SOURCES))
+#VTOP=$(patsubst %,V%,$(TOP))
 all:
 	@echo "Write this Makefile by your self."
 
