@@ -1,5 +1,5 @@
 VFLAGS=-cc --exe --build -j $(OPTFLAGS)
-
+VERILATOR=verilator
 SOURCES=$(wildcard vsrc/*.v)
 SIM_SRC=$(wildcard csrc/*_main.cpp)
 all:
