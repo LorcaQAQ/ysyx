@@ -1,9 +1,9 @@
-VFLAGS=--cc --exe --build -j $(OPTFLAGS)
+VFLAGS=--cc --exe --build -j 0 -Wall $(OPTFLAGS)
 VERILATOR=verilator
 # search v files
 SOURCES=$(wildcard vsrc/*.v)
 # testbench cpp files
-SIM_SRC=$(wildcard csrc/*_main.cpp)
+SIM_SRC=$(wildcard csrc/*main.cpp)
 
 #create top module
 #TOP=$(patsubst %.v,%,$(SOURCES))
