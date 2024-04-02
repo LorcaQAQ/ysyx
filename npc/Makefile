@@ -1,5 +1,4 @@
 TOPNAME=light
-VTOPNAME=$(patsubst %,V%,$(TOPNAME))
 NXDC_FILES=costr/top.nxdc
 INC_PATH ?=
 
@@ -41,12 +40,11 @@ sim:
 	@echo "Write this Makefile by your self."
 	@echo "-- VERILATE & BUILD --------"
 	$(VERILATOR) $(VFLAGS) \
-	--top-module $(TOPNAME)
+	--top-module $(TOPNAME)\
 	$(SOURCES) $(SIM_SRC) $(NVBOARD_ARCHIVE) \
 	$(addprefix -	CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS))\
 	--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 	@echo "-- RUN ---------------------"
-	$(OBJ_DIR)/$(VTOPNAME)
 	@echo "-- DONE --------------------"
 
 clean:
