@@ -42,7 +42,7 @@ sim:
 	$(VERILATOR) $(VFLAGS) \
 	--top-module $(TOPNAME)\
 	$(SOURCES) $(SIM_SRC) $(NVBOARD_ARCHIVE) \
-	$(addprefix -	CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS))\
+	$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS))\
 	--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 	@echo "-- RUN ---------------------"
 	@echo "-- DONE --------------------"
