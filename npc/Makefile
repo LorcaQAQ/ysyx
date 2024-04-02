@@ -23,3 +23,4 @@ sim:
 clean:
 	rm -rf obj_dir
 include ../Makefile
+include $(NVBOARD_HOME)/scripts/nvboard.mk
