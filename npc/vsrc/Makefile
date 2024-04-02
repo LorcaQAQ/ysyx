@@ -2,7 +2,7 @@ TOPNAME=light
 NXDC_FILES=constr/top.nxdc
 INC_PATH ?=
 
-VFLAGS +=-MMD --build -cc	\
+VERILATOR_CFLAGS +=-MMD --build -cc	\
 	-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR=verilator
 
@@ -34,7 +34,7 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 $(BIN):$(SOURCES) $(SIM_SRC) $(NVBOARD_ARCHIVE) 
 	@rm -rf $(OBJ_DIR)
-	$(VERILATOR) $(VFLAGS) \
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
 	--top-module $(TOPNAME) $^\
 	$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS))\
 	--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
