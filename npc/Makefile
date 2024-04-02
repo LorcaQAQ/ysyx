@@ -8,6 +8,15 @@ SIM_SRC=$(wildcard csrc/*main.cpp)
 #create top module
 TOP=$(patsubst %.v,%,$(SOURCES))
 VTOP=$(patsubst vsrc/%,V%,$(TOP))
+
+include $(NVBOARD_HOME)/scripts/nvboard.mk
+
+NXDC_FILES = constr/top.nxdc
+
+# constraint file
+SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
+$(SRC_AUTO_BIND): $(NXDC_FILES)
+	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 all:
 	@echo "Write this Makefile by your self."
 
@@ -23,4 +32,4 @@ sim:
 clean:
 	rm -rf obj_dir
 include ../Makefile
-include $(NVBOARD_HOME)/scripts/nvboard.mk
+
