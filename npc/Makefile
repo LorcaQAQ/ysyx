@@ -1,4 +1,4 @@
-VFLAGS=--cc --exe --build -j 0 -Wall $(OPTFLAGS)
+VFLAGS=-cc --exe --build -j 0 -Wall $(OPTFLAGS)
 VERILATOR=verilator
 # search v files
 SOURCES=$(wildcard vsrc/*.v)
