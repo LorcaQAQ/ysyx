@@ -1,8 +1,8 @@
 TOPNAME= light
 NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
-VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert
+VERILATOR_CFLAGS += -MMD --build -cc \
+										-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR=verilator
 BUILD_DIR=./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
