@@ -6,14 +6,14 @@ static TOP_NAME light;
 void nvboard_bind_all_pins(TOP_NAME* top);
 
 void single_cycle() {
-  top->clk = 0; top->eval();
-  top->clk = 1; top->eval();
+  light->clk = 0; light->eval();
+  light->clk = 1; light->eval();
 }
 
 void reset(int n) {
-  top->rst = 1;
+  light->rst = 1;
   while (n -- > 0) single_cycle();
-  top->rst = 0;
+  light->rst = 0;
 }
 
 int main() {
