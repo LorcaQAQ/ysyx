@@ -76,14 +76,14 @@ static int cmd_info(char *args){
 }
 
 static int cmd_x(char *args){
-	int n=0;
-	char *baseaddr;
-	int unsigned long addr=0;
-	sscanf(args,"%d",&n);
-	baseaddr=strtok(NULL," ");
-	sscanf(baseaddr,"%lx",&addr);
-	for(int i=0;i<n;i++){
-		printf("$%lx=%x\n",addr,paddr_read(addr,4));
+	char *n=strtok(args," ");
+	char *baseaddr=strtok(NULL," ");
+	int len=0;
+	paddr_t addr=0;
+	sscanf(n,"%d",&len);
+	sscanf(baseaddr,"%x",&addr);
+	for(int i=0;i<len;i++){
+		printf("$%x=%x\n",addr,paddr_read(addr,4));
 		addr=addr+4;
 		}
 	return 0;
