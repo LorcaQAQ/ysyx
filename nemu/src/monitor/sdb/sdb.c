@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/paddr.h>
 
 static int is_batch_mode = false;
 
@@ -54,9 +55,14 @@ static int cmd_q(char *args) {
 	nemu_state.state=NEMU_QUIT;
   return -1;
 }
+//single step execution
 static int cmd_si(char *args) {
-	char *arg=strtok(args,"");
-	cpu_exec(arg[1]);
+	int steps=0;
+	if(args==NULL)
+		steps=1;
+	else
+		sscanf(args,"%d",&steps);
+	cpu_exec(steps);
 	return 0;
 }
 
@@ -69,6 +75,20 @@ static int cmd_info(char *args){
 		//sdb_watchpoint_display();
 	return 0;
 }
+//scan  register
+static int cmd_x(char *args){
+	char *len_str=strtok(args," ");
+	char *addr_str=strtok(NULL," ");
+	int len=0;
+	int addr=0;
+	sscanf(len_str,"%d",&len);
+	sscanf(addr_str,"%x",&addr);
+	for(int i=0;i<len;i++){
+		printf("$%x=%x\n",addr,paddr_read(addr,4));
+		addr=addr+4;
+		}
+	return 0;
+	}
 
 static struct {
   const char *name;
@@ -80,6 +100,7 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "si", "Single step execution",cmd_si},
 	{ "info","Print program state",cmd_info},
+	{ "x", "Scan memory",cmd_x},
   /* TODO: Add more commands */
 
 };

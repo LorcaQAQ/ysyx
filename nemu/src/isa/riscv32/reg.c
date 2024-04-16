@@ -25,8 +25,9 @@ const char *regs[] = {
 
 void isa_reg_display() {
 	int count=sizeof(regs)/sizeof(regs[0]);
+	printf("---Print all the register---/n");
 	for(int i=0;i<count;i++){
-	printf("reg:%s--->%d\n",regs[i],cpu.gpr[i]);
+		printf("$%s=%d\n",regs[i],cpu.gpr[i]);
 	}
 }
 
