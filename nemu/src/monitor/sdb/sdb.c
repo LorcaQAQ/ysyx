@@ -79,7 +79,7 @@ static int cmd_x(char *args){
 	char *n=strtok(args," ");
 	char *baseaddr=strtok(NULL," ");
 	int len=0;
-	paddr_t addr=0;
+	int addr=0;
 	sscanf(n,"%d",&len);
 	sscanf(baseaddr,"%x",&addr);
 	for(int i=0;i<len;i++){
