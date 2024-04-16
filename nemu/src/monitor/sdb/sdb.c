@@ -56,7 +56,7 @@ static int cmd_q(char *args) {
 }
 static int cmd_si(char *args) {
 	//char *arg=strtok(args,"");
-	cpu_exec(args[0]);
+	cpu_exec(*args);
 	return 0;
 }
 
