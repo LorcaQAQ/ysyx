@@ -55,6 +55,7 @@ static int cmd_q(char *args) {
 	nemu_state.state=NEMU_QUIT;
   return -1;
 }
+//single step execution
 static int cmd_si(char *args) {
 	int steps=0;
 	if(args==NULL)
@@ -74,7 +75,7 @@ static int cmd_info(char *args){
 		//sdb_watchpoint_display();
 	return 0;
 }
-
+//scan  register
 static int cmd_x(char *args){
 	char *len_str=strtok(args," ");
 	char *addr_str=strtok(NULL," ");
