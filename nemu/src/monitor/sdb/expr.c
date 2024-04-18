@@ -146,6 +146,106 @@ static bool make_token(char *e) {
 
   return true;
 }
+static bool check_parentheses(int p,int q){
+	bool checked;//check if the parentheses are paired
+	int mark;//a mark to record the pair of parentheses
+	if(tokens[p].type=='('&&tokens[q].type==')'){
+		checked=true;
+		mark=1;
+	}else{
+		checked=false;
+		mark=0;
+	}
+		for(int i=p+1;i<q;i++){
+			if(tokens[i].type==')'){
+				mark--;
+			}
+			else if(tokens[i].type=='('){
+				mark++;
+			}
+			if(mark<0||(mark!=0&&i==q)){
+				printf("The parentheses are not paired");
+				assert(0);
+			}
+			else if(mark==0&&i!=q){
+				printf("The expression cannot be parenthesized by the outermost parentheses");
+				checked=false;
+			}else if(mark==0&&i==q&&checked==true){
+				printf("The expression can be parenthesized");
+				return true;
+			}
+		}
+	
+		return checked;
+	}
+
+static int position_main_operator(int p,int q){
+	int position=q;
+	int mark=0;
+	for(int i=q;i>p;i--){
+		if(tokens[i].type==')')
+			mark++;
+		else if(tokens[i].type=='(')
+			mark--;
+		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0){//the tokens is +,-,*,/ and it is not within parenthese.
+			if(tokens[position].type=='+'||tokens[position].type=='-'){//if the token i have chosen is + or -
+				continue;
+			}
+			else if(tokens[position].type=='*'||tokens[position].type=='/'){//if the token i have chosen is * or /
+				if(tokens[i].type=='+'||tokens[i].type=='-'){
+					position=i;
+				}
+				else {
+					continue;
+				}
+			}else{
+				position=i;
+			}
+			}
+		}
+	return position;
+
+	}
+
+
+static int eval(int p,int q){	
+	  if (p > q) {
+			    printf("Bad expression");//
+					assert(0);												//
+				
+			  }
+		  else if (p == q) {
+				    /* Single token.
+						 *      * For now this token should be a number.
+						 *           * Return the value of the number.
+						 *                */
+				int num;
+				sscanf(tokens[p].str,"%d",&num);
+				return num;
+				  }
+			  else if (check_parentheses(p, q) == true) {
+					    /* The expression is surrounded by a matched pair of parentheses.
+							 *      * If that is the case, just throw away the parentheses.
+							 *           */
+					    return eval(p + 1, q - 1);
+							  }
+				  else {
+								int val1;
+								int val2;
+								int op;
+						    op = position_main_operator(p,q);
+								    val1 = eval(p, op - 1);
+										    val2 = eval(op + 1, q);
+
+												    switch (tokens[op].type) {
+															      case '+': return val1 + val2;
+																							      case '-': /* ... */
+																							      case '*': /* ... */
+																							      case '/': /* ... */
+																							      default: assert(0);
+																														     }
+														  }
+}
 
 
 word_t expr(char *e, bool *success) {
@@ -155,6 +255,8 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  	
-	return 0;
+	if(nr_token>0) nr_token--;
+  int a=0;
+	a=eval(0,nr_token);	
+	return a;
 }
