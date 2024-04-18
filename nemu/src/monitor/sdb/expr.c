@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_NUM,TK_EQ,
 
   /* TODO: Add more token types */
 
@@ -38,9 +38,12 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
-	{"\\*", '*'},         // times
-	{"\\-", '-'},					// substraction
-	{"/",   '/'},	        // division 
+	{"\\-", '-'},         // sub
+	{"\\*", '*'},					// multi
+	{"/",   '/'},	        // division
+	{"\\(", '('},					// left bracket
+	{"\\)", ')'},					// right bracket
+	{"[0-9]+", TK_NUM},			// numbers 
   {"==", TK_EQ},        // equal
 };
 
@@ -98,8 +101,38 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-          default: TODO();
+					case TK_NOTYPE:break;
+					//arithematic operator
+					case '+':tokens[nr_token].type='+';
+									 break;
+					case '-':tokens[nr_token].type='-';
+									 break;
+					case '*':tokens[nr_token].type='*';
+									 break;
+					case '/':tokens[nr_token].type='/';
+									 break;
+					case '(':tokens[nr_token].type='(';
+									 break;
+					case ')':tokens[nr_token].type=')';
+									 break;
+					case TK_NUM:
+									 if(substr_len<=32){
+										tokens[nr_token].type=TK_NUM;
+										strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 }
+									 else{
+										 printf("The length of oprand should be less than 32 in position:%d\n",position);
+										 return false;
+									 }
+									 break;
+					case TK_EQ:
+									 tokens[nr_token].type=TK_EQ;
+									 break;
+									
+          default: printf("There is no type corresponding to the expression[%d]\n",position);
+									 return false;
         }
+				nr_token++;
 
         break;
       }
@@ -122,7 +155,6 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
-
-  return 0;
+  	
+	return 0;
 }
