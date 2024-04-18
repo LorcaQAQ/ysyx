@@ -182,27 +182,38 @@ static bool check_parentheses(int p,int q){
 static int position_main_operator(int p,int q){
 	int position=q;
 	int mark=0;
-	for(int i=q;i>p;i--){
+	for(int i=q;i>p;i--)
+	{
 		if(tokens[i].type==')')
 			mark++;
 		else if(tokens[i].type=='(')
 			mark--;
-		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0){//the tokens is +,-,*,/ and it is not within parenthese.
-			if(tokens[position].type=='+'||tokens[position].type=='-'){//if the token i have chosen is + or -
+		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
+		{//the tokens is +,-,*,/ and it is not within parenthese.
+			if(tokens[position].type=='+'||tokens[position].type=='-')
+			{//if the token i have chosen is + or -
 				continue;
 			}
-			else if(tokens[position].type=='*'||tokens[position].type=='/'){//if the token i have chosen is * or /
-				if(tokens[i].type=='+'||tokens[i].type=='-'){
+			else if(tokens[position].type=='*'||tokens[position].type=='/')
+			{//if the token i have chosen is * or /
+				if(tokens[i].type=='+'||tokens[i].type=='-')
+				{
 					position=i;
 				}
-				else {
+				else 
+				{
 					continue;
 				}
-			}else{
+			}else
+			{
 				position=i;
 			}
-			}
 		}
+		else
+		{
+		position=i;
+		}
+	}
 	return position;
 
 	}
