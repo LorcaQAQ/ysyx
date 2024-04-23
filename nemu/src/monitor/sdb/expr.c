@@ -148,15 +148,13 @@ static bool make_token(char *e) {
 }
 static bool check_parentheses(int p,int q){
 	bool checked;//check if the parentheses are paired
-	int mark;//a mark to record the pair of parentheses
+	int mark=0;//a mark to record the pair of parentheses
 	if(tokens[p].type=='('&&tokens[q].type==')'){
 		checked=true;
-		mark=1;
 	}else{
 		checked=false;
-		mark=0;
 	}
-		for(int i=p+1;i<q;i++){
+		for(int i=p;i<q;i++){
 			if(tokens[i].type==')'){
 				mark--;
 			}
@@ -219,7 +217,7 @@ static int position_main_operator(int p,int q){
 	}
 
 
-static int eval(int p,int q){	
+static uint32_t eval(int p,int q){	
 	  if (p > q) {
 			    printf("Bad expression");//
 					assert(0);												//
@@ -241,21 +239,21 @@ static int eval(int p,int q){
 					    return eval(p + 1, q - 1);
 							  }
 				  else {
-								int val1;
-								int val2;
-								int op;
-						    op = position_main_operator(p,q);
-								    val1 = eval(p, op - 1);
-										    val2 = eval(op + 1, q);
+								uint32_t val1;
+								uint32_t val2;
+								int op_position;
+						    op_position = position_main_operator(p,q);
+								val1 = eval(p, op_position - 1);
+								val2 = eval(op_position + 1, q);
 
-												    switch (tokens[op].type) {
-															      case '+': return val1 + val2;
-																							      case '-': /* ... */
-																							      case '*': /* ... */
-																							      case '/': /* ... */
-																							      default: assert(0);
-																														     }
-														  }
+								switch (tokens[op_position].type) {
+											case '+': return val1 + val2;
+											case '-': return val1-val2;
+											case '*': return val1*val2;
+											case '/': return val1/val2;
+											default: assert(0);
+											}
+								}
 }
 
 

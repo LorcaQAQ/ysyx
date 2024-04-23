@@ -31,9 +31,20 @@ static char *code_format =
 "  return 0; "
 "}";
 
+static void gen(char *bracket);
+static void gen_num();
+static void gen_rand_op();
+static int buf_index=0;
+
 static void gen_rand_expr() {
-  buf[0] = '\0';
+		  switch (choose(3)) {
+				  case 0: gen_num(); break;
+					case 1: gen('('); gen_rand_expr(); gen(')'); break;
+					default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+			}
+			buf[buf_index]='\0';
 }
+
 
 int main(int argc, char *argv[]) {
   int seed = time(0);
@@ -67,3 +78,28 @@ int main(int argc, char *argv[]) {
   }
   return 0;
 }
+
+static void gen(char* bracket){
+	strcpy(buf[buf_index],bracket);
+	buf_index++;
+}
+static void gen_num()i{
+	//srand((unsigned)time());
+	int rand_num=choose(10);
+	char *rand_num_str;
+	itoa(rand_num,rand_num_str,10);
+	strcpy(buf[buf_index],rand_num_str);
+	buf_index++;
+}
+static void gen_rand_op(){
+	char *op;
+	switch(choose(4)){
+		case 0:strcpy(op,"+");break;
+		case 1:strcpy(op,"-");break;
+		case 2:strcpy(op,"*");break;
+		default:strcpy(op,"/");break;
+	}
+	buf_index++;
+}
+
+
