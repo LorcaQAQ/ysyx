@@ -35,13 +35,21 @@ static void gen(char *bracket);
 static void gen_num();
 static void gen_rand_op();
 static int buf_index=0;
-
+static void gen_space();
 static void gen_rand_expr() {
+		if(buf_index==65536){
+			memset(buf,0,sizeof(buf));
+			buf_index=0;
+			gen_rand_expr();
+		}
+		else{
 		  switch (choose(3)) {
 				  case 0: gen_num(); break;
 					case 1: gen('('); gen_rand_expr(); gen(')'); break;
+					case 2: gen_space();gen_num();break;
 					default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
 			}
+		}
 			buf[buf_index]='\0';
 }
 
@@ -83,11 +91,11 @@ static void gen(char* bracket){
 	strcpy(buf[buf_index],bracket);
 	buf_index++;
 }
-static void gen_num()i{
+static void gen_num(){
 	//srand((unsigned)time());
 	int rand_num=choose(10);
 	char *rand_num_str;
-	itoa(rand_num,rand_num_str,10);
+	sprintf(rand_num_str,"%d",rand_num);
 	strcpy(buf[buf_index],rand_num_str);
 	buf_index++;
 }
@@ -101,5 +109,8 @@ static void gen_rand_op(){
 	}
 	buf_index++;
 }
-
+static void gen_space(){
+	buf[buf_index]=' ';
+	buf_index++;
+}
 
