@@ -19,6 +19,7 @@ void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
+word_t expr(char *e,bool *success);
 
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
@@ -30,6 +31,24 @@ int main(int argc, char *argv[]) {
 
   /* Start engine. */
   engine_start();
+
+	/*	To check expression value */
+	FILE *fp;
+	fp=fopen("input","r");
+	assert(fp!=NULL);
+	for(int i=0;!feof(fp);i++){
+		word_t true_result;
+		char *expr_str=NULL;
+		bool success=true;
+		int ret;
+		ret=fscanf(fp,"%u %s",&true_result,expr_str);
+		assert(ret!=EOF);
+		if(true_result!=expr(expr_str,&success)){
+			printf("The %d'th expression isn't correct",i);
+		}
+	}
+		
+
 
   return is_exit_status_bad();
 }

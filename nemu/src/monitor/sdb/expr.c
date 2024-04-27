@@ -228,8 +228,8 @@ static uint32_t eval(int p,int q){
 						 *      * For now this token should be a number.
 						 *           * Return the value of the number.
 						 *                */
-				int num;
-				sscanf(tokens[p].str,"%d",&num);
+				uint32_t num;
+				sscanf(tokens[p].str,"%u",&num);
 				return num;
 				  }
 			  else if (check_parentheses(p, q) == true) {
@@ -265,7 +265,7 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
 	if(nr_token>0) nr_token--;
-  int a=0;
-	a=eval(0,nr_token);	
-	return a;
+  word_t result;
+	result=eval(0,nr_token);	
+	return result;
 }
