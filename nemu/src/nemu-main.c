@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 	assert(fp!=NULL);
 	for(int i=0;!feof(fp);i++){
 		word_t true_result;
-		char *expr_str=NULL;
+		char expr_str[66532]={};
 		bool success=true;
 		int ret;
 		ret=fscanf(fp,"%u %s",&true_result,expr_str);
