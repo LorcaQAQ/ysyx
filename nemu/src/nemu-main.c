@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
 	/*	To check expression value */
 	FILE *fp;
-	fp=fopen("/home/lorca/ysyx-workbench/nemu/src/input","r");
+	fp=fopen("./input","r");
 	assert(fp!=NULL);
 	for(int i=0;!feof(fp);i++){
 		word_t true_result;
