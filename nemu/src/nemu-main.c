@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	/*	To check expression value */
 	FILE *fp;
 	fp=fopen("./src/input.txt","r");
-	assert(fp!=NULL);
+	//assert(fp!=NULL);
 	for(int i=0;!feof(fp);i++){
 		word_t true_result;
 		char *expr_str=NULL;
