@@ -238,6 +238,7 @@ static uint32_t eval(int p,int q){
 			else {
 								uint32_t val1;
 								uint32_t val2;
+								uint32_t val2_complement;
 								int op_position;
 						    op_position = position_main_operator(p,q);
 								val1 = eval(p, op_position - 1);
@@ -245,7 +246,7 @@ static uint32_t eval(int p,int q){
 
 								switch (tokens[op_position].type) {
 											case '+': return val1 + val2;
-											case '-': return val1-val2;
+											case '-': val2_complement=~val2;return val1+val2_complement+1;
 											case '*': return val1*val2;
 											case '/': return val1/val2;
 											default: assert(0);
