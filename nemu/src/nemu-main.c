@@ -45,6 +45,11 @@ int main(int argc, char *argv[]) {
 		char *fp2=fgets(expr_str,65536,fp);
 		assert(fp2!=NULL);
 		assert(ret!=EOF);
+		int i=0;
+		while(expr_str[i]!='\n'){
+			i++;
+		}
+		expr_str[i]='\0';
 		printf("We are checking the %d'th expression\n",i);
 		if(true_result!=expr(expr_str,&success)){
 			printf("The %d'th expression isn't correct\n",i);
