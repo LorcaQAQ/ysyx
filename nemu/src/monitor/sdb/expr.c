@@ -281,6 +281,8 @@ word_t expr(char *e, bool *success) {
 	for(int i=0;i<nr_token;i++){
 		if(tokens[i].type=='-'&&!(tokens[i-1].type==TK_NUM||tokens[i-1].type==')')){
 			tokens[i].type=NEG;
+		}else if (i==0&&tokens[i].type=='-'){
+			tokens[i].type=NEG;
 		}
 	}
   int result;
