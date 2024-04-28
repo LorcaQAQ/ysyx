@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_NUM,TK_EQ,
 
   /* TODO: Add more token types */
 
@@ -38,6 +38,12 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
+	{"\\-", '-'},         // sub
+	{"\\*", '*'},					// multi
+	{"/",   '/'},	        // division
+	{"\\(", '('},					// left bracket
+	{"\\)", ')'},					// right bracket
+	{"[0-9]+", TK_NUM},			// numbers 
   {"==", TK_EQ},        // equal
 };
 
@@ -67,7 +73,7 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[66532] __attribute__((used)) = {};//change from 32 to 66532
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -95,7 +101,38 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-          default: TODO();
+					case TK_NOTYPE:break;
+					//arithematic operator
+					case '+':tokens[nr_token].type='+';nr_token++;
+									 break;
+					case '-':tokens[nr_token].type='-';nr_token++;
+									 break;
+					case '*':tokens[nr_token].type='*';nr_token++;
+									 break;
+					case '/':tokens[nr_token].type='/';nr_token++;
+									 break;
+					case '(':tokens[nr_token].type='(';nr_token++;
+									 break;
+					case ')':tokens[nr_token].type=')';nr_token++;
+									 break;
+					case TK_NUM:
+									 if(substr_len<=32){
+										tokens[nr_token].type=TK_NUM;
+										strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+										nr_token++;
+									 }
+									 else{
+										 printf("The length of oprand should be less than 32 in position:%d\n",position);
+										 return false;
+									 }
+									 break;
+					case TK_EQ:
+									 tokens[nr_token].type=TK_EQ;
+									 nr_token++;
+									 break;
+									
+          default: printf("There is no type corresponding to the expression[%d]\n",position);
+									 return false;
         }
 
         break;
@@ -110,6 +147,111 @@ static bool make_token(char *e) {
 
   return true;
 }
+static bool check_parentheses(int p,int q){
+	bool checked;//check if the parentheses are paired
+	int mark=0;//a mark to record the pair of parentheses
+	if(tokens[p].type=='('&&tokens[q].type==')'){
+		checked=true;
+	}else{
+		checked=false;
+	}
+	for(int i=p;i<q;i++){
+		if(tokens[i].type==')'){
+			mark--;
+		}
+		else if(tokens[i].type=='('){
+				mark++;
+		}
+		if(mark<0||(mark!=0&&i==q)){
+			printf("The parentheses are not paired");
+			assert(0);
+		}
+		else if(mark==0&&i!=q){
+			//printf("The expression cannot be parenthesized by the outermost parentheses\n");
+			checked=false;
+		}else if(mark==0&&i==q&&checked==true){
+			//printf("The expression can be parenthesized");
+			return true;
+		}
+	}
+	
+	return checked;
+}
+
+static int position_main_operator(int p,int q){
+	int position=q;
+	int mark=0;
+	for(int i=q;i>p;i--)
+	{
+		if(tokens[i].type==')')
+			mark++;
+		else if(tokens[i].type=='(')
+			mark--;
+		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
+		{//the tokens is +,-,*,/ and it is not within parenthese.
+			if(tokens[position].type=='+'||tokens[position].type=='-'){
+				//if the token i have chosen is + or -
+				continue;
+			}
+			else if(tokens[position].type=='*'||tokens[position].type=='/'){
+				//if the token i have chosen is * or /
+				if(tokens[i].type=='+'||tokens[i].type=='-'){
+					position=i;
+				}
+				else {
+					continue;
+				}
+			}else{
+				position=i;
+			}
+		}
+		else{
+			continue;
+		}
+	}
+	return position;
+
+	}
+
+
+static int eval(int p,int q){	
+	  if (p > q) {
+			    printf("Bad expression\n");//
+					assert(0);												//
+				
+			  }
+		  else if (p == q) {
+				    /* Single token.
+						 *      * For now this token should be a number.
+						 *           * Return the value of the number.
+						 *                */
+				int num;
+				sscanf(tokens[p].str,"%d",&num);
+				return num;
+			}
+			else if (check_parentheses(p, q) == true) {
+					    /* The expression is surrounded by a matched pair of parentheses.
+							 *      * If that is the case, just throw away the parentheses.
+							 *           */
+					    return eval(p + 1, q - 1);
+			}
+			else {
+								int val1;
+								int val2;
+								int op_position;
+						    op_position = position_main_operator(p,q);
+								val1 = eval(p, op_position - 1);
+								val2 = eval(op_position + 1, q);
+
+								switch (tokens[op_position].type) {
+											case '+': return val1 + val2;
+											case '-': return val1 - val2;
+											case '*': return val1*val2;
+											case '/': return val1/val2;
+											default: assert(0);
+											}
+			}
+}
 
 
 word_t expr(char *e, bool *success) {
@@ -119,7 +261,8 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
-
-  return 0;
+	if(nr_token>0) nr_token--;
+  int result;
+	result=eval(0,nr_token);	
+	return (word_t)result;
 }

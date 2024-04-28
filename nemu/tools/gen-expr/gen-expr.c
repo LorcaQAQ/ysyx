@@ -30,10 +30,28 @@ static char *code_format =
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
-
+static int expr_len=0;
+static int choose(int n);
+static void gen(char bracket);
+static void gen_num();
+static void gen_rand_op();
+static int buf_index=0;
+static void gen_space();
 static void gen_rand_expr() {
-  buf[0] = '\0';
+	int branch;
+		if(expr_len<=65532){
+			branch=choose(4);
+		}else{
+			branch=0;
+		}
+		  switch (branch) {
+				  case 0: gen_num(); break;
+					case 1: expr_len+=3;gen('('); gen_rand_expr(); gen(')'); break;
+					case 2: expr_len+=2;gen_space();gen_rand_expr();break;
+					default: expr_len+=3;gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+			}
 }
+
 
 int main(int argc, char *argv[]) {
   int seed = time(0);
@@ -44,8 +62,10 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+    buf_index=0;
+		expr_len=0;
     gen_rand_expr();
-
+		buf[buf_index]='\0';
     sprintf(code_buf, code_format, buf);
 
     FILE *fp = fopen("/tmp/.code.c", "w");
@@ -53,7 +73,7 @@ int main(int argc, char *argv[]) {
     fputs(code_buf, fp);
     fclose(fp);
 
-    int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
+    int ret = system("gcc /tmp/.code.c -Werror -o /tmp/.expr");
     if (ret != 0) continue;
 
     fp = popen("/tmp/.expr", "r");
@@ -67,3 +87,37 @@ int main(int argc, char *argv[]) {
   }
   return 0;
 }
+
+static void gen(char bracket){
+	buf[buf_index]=bracket;
+	buf_index++;
+}
+static void gen_num(){
+	int rand_num=rand()%10;
+	while(rand_num==0&&buf[buf_index]=='/'){
+		rand_num=rand()%10;
+	}
+	char rand_num_str;
+	rand_num_str=rand_num+'0';
+	buf[buf_index]=rand_num_str;
+	buf_index++;
+}
+static void gen_rand_op(){
+	switch(choose(4)){
+		case 0:buf[buf_index]='+';break;
+		case 1:buf[buf_index]='-';break;
+		case 2:buf[buf_index]='*';break;
+		default:buf[buf_index]='/';break;
+	}
+	buf_index++;
+}
+static void gen_space(){
+	buf[buf_index]=' ';
+	buf_index++;
+}
+
+static int choose(int n){
+	int randnum=rand()%n;
+	return randnum;
+}
+
