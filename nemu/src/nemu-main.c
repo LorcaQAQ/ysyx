@@ -44,7 +44,9 @@ int main(int argc, char *argv[]) {
 		ret=fscanf(fp,"%u",&true_result);
 		char *fp2=fgets(expr_str,65536,fp);
 		assert(fp2!=NULL);
-		assert(ret!=EOF);
+		if(ret==EOF){
+			printf("All the expression has been read.\n");
+		}
 		int expr_index=0;
 		while(expr_str[expr_index]!='\n'){
 			expr_index++;
