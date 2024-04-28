@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
 		int ret;
 		ret=fscanf(fp,"%u %s",&true_result,expr_str);
 		assert(ret!=EOF);
+		printf("We are checking the %d'th expression",i);
 		if(true_result!=expr(expr_str,&success)){
 			printf("The %d'th expression isn't correct",i);
 		}
