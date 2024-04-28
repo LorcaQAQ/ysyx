@@ -204,8 +204,8 @@ static int position_main_operator(int p,int q){
 				position=i;
 			}
 		}
-		else if(tokens[position].type!='+'||tokens[position].type!='-'||tokens[position].type!='*'||tokens[position].type!='/'){
-		position=i;
+		else{
+			continue;
 		}
 	}
 	return position;
