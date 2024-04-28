@@ -179,7 +179,7 @@ static bool check_parentheses(int p,int q){
 }
 
 static bool check_neg(int p,int q){
-	if(tokens[p].type=='-'&&(check_parentheses(p,q)||p==q-1)){
+	if(tokens[p].type=='-'&&(check_parentheses(p+1,q)||p==q-1)){
 		return true;
 	}
 	else{
