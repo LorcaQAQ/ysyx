@@ -264,7 +264,7 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-	if(nr_token>0) nr_token--;
+	//if(nr_token>0) nr_token--;
   word_t result;
 	result=eval(0,nr_token);	
 	return result;
