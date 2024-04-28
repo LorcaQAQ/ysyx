@@ -167,10 +167,10 @@ static bool check_parentheses(int p,int q){
 			assert(0);
 		}
 		else if(mark==0&&i!=q){
-			printf("The expression cannot be parenthesized by the outermost parentheses");
+			//printf("The expression cannot be parenthesized by the outermost parentheses\n");
 			checked=false;
 		}else if(mark==0&&i==q&&checked==true){
-			printf("The expression can be parenthesized");
+			//printf("The expression can be parenthesized");
 			return true;
 		}
 	}
