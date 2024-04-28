@@ -51,8 +51,9 @@ int main(int argc, char *argv[]) {
 		}
 		expr_str[expr_index]='\0';
 		printf("We are checking the %d'th expression\n",i);
-		if(true_result!=expr(expr_str,&success)){
-			printf("The %d'th expression isn't correct\n,result is,expression result is:",i);
+		word_t expr_result=expr(expr_str,&success);
+		if(true_result!=expr_result){
+			printf("The %d'th expression isn't correct\n,result is: %u\n,expression result is:%u/n",i,true_result,expr_result);
 			assert(0);
 		}
 	}
