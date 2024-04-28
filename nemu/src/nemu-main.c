@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
 		printf("We are checking the %d'th expression\n",i);
 		if(true_result!=expr(expr_str,&success)){
 			printf("The %d'th expression isn't correct\n",i);
+			assert(0);
 		}
 	}
 
