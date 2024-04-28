@@ -197,7 +197,7 @@ static int position_main_operator(int p,int q){
 			mark++;
 		else if(tokens[i].type=='(')
 			mark--;
-		if((tokens[i].type=='+'||(tokens[i].type=='-'&&tokens[i-1].type==TK_NUM)||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
+		if((tokens[i].type=='+'||(tokens[i].type=='-'&&(tokens[i-1].type==TK_NUM||tokens[i-1].type==')'))||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
 		{//the tokens is +,-,*,/ and it is not within parenthese.
 			if(tokens[position].type=='+'||tokens[position].type=='-'){
 				//if the token i have chosen is + or -
