@@ -178,6 +178,16 @@ static bool check_parentheses(int p,int q){
 	return checked;
 }
 
+static bool check_neg(int p){
+	if(tokens[p].type=='-'){
+		return true;
+	}
+	else{
+		return false;
+	}
+
+}
+
 static int position_main_operator(int p,int q){
 	int position=q;
 	int mark=0;
@@ -187,7 +197,7 @@ static int position_main_operator(int p,int q){
 			mark++;
 		else if(tokens[i].type=='(')
 			mark--;
-		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
+		if((tokens[i].type=='+'||(tokens[i].type=='-'&&tokens[i-1].type==TK_NUM)||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
 		{//the tokens is +,-,*,/ and it is not within parenthese.
 			if(tokens[position].type=='+'||tokens[position].type=='-'){
 				//if the token i have chosen is + or -
@@ -235,7 +245,12 @@ static int eval(int p,int q){
 							 *           */
 					    return eval(p + 1, q - 1);
 			}
-			else {
+			else if(check_neg(p)==true){
+				/*At the head of the expression, there is a negative symbol*/
+				return -eval(p+1,q);
+			}
+				else
+			{
 								int val1;
 								int val2;
 								int op_position;
