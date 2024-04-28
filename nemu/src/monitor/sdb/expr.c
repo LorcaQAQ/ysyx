@@ -214,7 +214,7 @@ static int position_main_operator(int p,int q){
 	}
 
 
-static uint32_t eval(int p,int q){	
+static int eval(int p,int q){	
 	  if (p > q) {
 			    printf("Bad expression\n");//
 					assert(0);												//
@@ -225,8 +225,8 @@ static uint32_t eval(int p,int q){
 						 *      * For now this token should be a number.
 						 *           * Return the value of the number.
 						 *                */
-				uint32_t num;
-				sscanf(tokens[p].str,"%u",&num);
+				int num;
+				sscanf(tokens[p].str,"%d",&num);
 				return num;
 			}
 			else if (check_parentheses(p, q) == true) {
@@ -236,9 +236,8 @@ static uint32_t eval(int p,int q){
 					    return eval(p + 1, q - 1);
 			}
 			else {
-								uint32_t val1;
-								uint32_t val2;
-								uint32_t val2_complement;
+								int val1;
+								int val2;
 								int op_position;
 						    op_position = position_main_operator(p,q);
 								val1 = eval(p, op_position - 1);
@@ -246,7 +245,7 @@ static uint32_t eval(int p,int q){
 
 								switch (tokens[op_position].type) {
 											case '+': return val1 + val2;
-											case '-': val2_complement=~val2;return val1+val2_complement+1;
+											case '-': return val1 - val2;
 											case '*': return val1*val2;
 											case '/': return val1/val2;
 											default: assert(0);
@@ -263,7 +262,7 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
 	if(nr_token>0) nr_token--;
-  word_t result;
+  int result;
 	result=eval(0,nr_token);	
-	return result;
+	return (word_t)result;
 }
