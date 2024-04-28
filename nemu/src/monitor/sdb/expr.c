@@ -178,8 +178,8 @@ static bool check_parentheses(int p,int q){
 	return checked;
 }
 
-static bool check_neg(int p){
-	if(tokens[p].type=='-'){
+static bool check_neg(int p,int q){
+	if(tokens[p].type=='-'&&(check_parentheses(p,q)||p==q-1)){
 		return true;
 	}
 	else{
@@ -245,7 +245,7 @@ static int eval(int p,int q){
 							 *           */
 					    return eval(p + 1, q - 1);
 			}
-			else if(check_neg(p)==true){
+			else if(check_neg(p,q)==true){
 				/*At the head of the expression, there is a negative symbol*/
 				return -eval(p+1,q);
 			}
