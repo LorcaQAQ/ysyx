@@ -41,14 +41,13 @@ int main(int argc, char *argv[]) {
 		char expr_str[66532]={};
 		bool success=true;
 		int ret;
-		ret=fscanf(fp,"%u %s",&true_result,expr_str);
+		ret=fscanf(fp,"%u %[^\n]",&true_result,expr_str);
 		assert(ret!=EOF);
 		printf("We are checking the %d'th expression\n",i);
 		if(true_result!=expr(expr_str,&success)){
 			printf("The %d'th expression isn't correct",i);
 		}
 	}
-		
 
 
   return is_exit_status_bad();
