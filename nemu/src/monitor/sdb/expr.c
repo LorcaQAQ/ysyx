@@ -178,8 +178,8 @@ static bool check_parentheses(int p,int q){
 	return checked;
 }
 
-static bool check_neg(int p,int q){
-	if(tokens[p].type=='-'&&(check_parentheses(p+1,q)||q==p+1)){
+static bool check_neg(int p){
+	if(tokens[p].type=='-'){
 		return true;
 	}
 	else{
@@ -245,18 +245,28 @@ static int eval(int p,int q){
 							 *           */
 					    return eval(p + 1, q - 1);
 			}
-			else if(check_neg(p,q)==true){
-				/*At the head of the expression, there is a negative symbol*/
-				return -eval(p+1,q);
-			}
 				else
 			{
 								int val1;
 								int val2;
 								int op_position;
 						    op_position = position_main_operator(p,q);
-								val1 = eval(p, op_position - 1);
-								val2 = eval(op_position + 1, q);
+
+								/*At the head of the expression, there is a negative symbol*/
+								if(check_neg(p)==true){
+									val1=-eval(p+1,op_position-1);
+
+								}
+								else{
+									val1 = eval(p, op_position - 1);
+								}
+
+								if(check_neg(op_position+1)==true){
+									val2=-eval(op_position+2,q);
+								}
+								else{
+									val2 = eval(op_position + 1, q);
+								}
 
 								switch (tokens[op_position].type) {
 											case '+': return val1 + val2;
