@@ -47,7 +47,6 @@ int main(int argc, char *argv[]) {
 		}
 		char *fp2=fgets(expr_str,65536,fp);
 		if(fp2!=NULL){
-			printf("All the expression have been read.\n");
 		
 			int expr_index=0;
 			while(expr_str[expr_index]!='\n'){
@@ -60,6 +59,8 @@ int main(int argc, char *argv[]) {
 				printf("The %d'th expression isn't correct,\nresult is: %u,\nexpression result is:%u\n",i,true_result,expr_result);
 				assert(0);
 			}
+		}else{
+			printf("All the expression have been read.\n");
 		}
 	}
 	fclose(fp);
