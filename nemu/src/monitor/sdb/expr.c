@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_NUM,TK_EQ,
+  TK_NOTYPE = 256, TK_NUM,TK_EQ,NEG
 
   /* TODO: Add more token types */
 
@@ -179,7 +179,7 @@ static bool check_parentheses(int p,int q){
 }
 
 static bool check_neg(int p){
-	if(tokens[p].type=='-'){
+	if(tokens[p].type==NEG){
 		return true;
 	}
 	else{
@@ -197,7 +197,7 @@ static int position_main_operator(int p,int q){
 			mark++;
 		else if(tokens[i].type=='(')
 			mark--;
-		if((tokens[i].type=='+'||(tokens[i].type=='-'&&(tokens[i-1].type==TK_NUM||tokens[i-1].type==')'))||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
+		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
 		{//the tokens is +,-,*,/ and it is not within parenthese.
 			if(tokens[position].type=='+'||tokens[position].type=='-'){
 				//if the token i have chosen is + or -
@@ -239,6 +239,9 @@ static int eval(int p,int q){
 				sscanf(tokens[p].str,"%d",&num);
 				return num;
 			}
+		else if(check_neg(p)==true){
+			return -eval(p+1,q);
+		}
 			else if (check_parentheses(p, q) == true) {
 					    /* The expression is surrounded by a matched pair of parentheses.
 							 *      * If that is the case, just throw away the parentheses.
@@ -253,20 +256,8 @@ static int eval(int p,int q){
 						    op_position = position_main_operator(p,q);
 
 								/*At the head of the expression, there is a negative symbol*/
-								if(check_neg(p)==true){
-									val1=-eval(p+1,op_position-1);
-
-								}
-								else{
-									val1 = eval(p, op_position - 1);
-								}
-
-								if(check_neg(op_position+1)==true){
-									val2=-eval(op_position+2,q);
-								}
-								else{
-									val2 = eval(op_position + 1, q);
-								}
+								val1 = eval(p, op_position - 1);
+								val2 = eval(op_position + 1, q);
 
 								switch (tokens[op_position].type) {
 											case '+': return val1 + val2;
@@ -287,6 +278,11 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
 	if(nr_token>0) nr_token--;
+	for(int i=0;i<nr_token;i++){
+		if(tokens[i].type=='-'&&!(tokens[i-1].type==TK_NUM||tokens[i-1].type==')')){
+			tokens[i].type=NEG;
+		}
+	}
   int result;
 	result=eval(0,nr_token);	
 	return (word_t)result;
