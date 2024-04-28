@@ -154,28 +154,28 @@ static bool check_parentheses(int p,int q){
 	}else{
 		checked=false;
 	}
-		for(int i=p;i<q;i++){
-			if(tokens[i].type==')'){
-				mark--;
-			}
-			else if(tokens[i].type=='('){
-				mark++;
-			}
-			if(mark<0||(mark!=0&&i==q)){
-				printf("The parentheses are not paired");
-				assert(0);
-			}
-			else if(mark==0&&i!=q){
-				printf("The expression cannot be parenthesized by the outermost parentheses");
-				checked=false;
-			}else if(mark==0&&i==q&&checked==true){
-				printf("The expression can be parenthesized");
-				return true;
-			}
+	for(int i=p;i<q;i++){
+		if(tokens[i].type==')'){
+			mark--;
 		}
-	
-		return checked;
+		else if(tokens[i].type=='('){
+				mark++;
+		}
+		if(mark<0||(mark!=0&&i==q)){
+			printf("The parentheses are not paired");
+			assert(0);
+		}
+		else if(mark==0&&i!=q){
+			printf("The expression cannot be parenthesized by the outermost parentheses");
+			checked=false;
+		}else if(mark==0&&i==q&&checked==true){
+			printf("The expression can be parenthesized");
+			return true;
+		}
 	}
+	
+	return checked;
+}
 
 static int position_main_operator(int p,int q){
 	int position=q;
@@ -188,27 +188,23 @@ static int position_main_operator(int p,int q){
 			mark--;
 		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
 		{//the tokens is +,-,*,/ and it is not within parenthese.
-			if(tokens[position].type=='+'||tokens[position].type=='-')
-			{//if the token i have chosen is + or -
+			if(tokens[position].type=='+'||tokens[position].type=='-'){
+				//if the token i have chosen is + or -
 				continue;
 			}
-			else if(tokens[position].type=='*'||tokens[position].type=='/')
-			{//if the token i have chosen is * or /
-				if(tokens[i].type=='+'||tokens[i].type=='-')
-				{
+			else if(tokens[position].type=='*'||tokens[position].type=='/'){
+				//if the token i have chosen is * or /
+				if(tokens[i].type=='+'||tokens[i].type=='-'){
 					position=i;
 				}
-				else 
-				{
+				else {
 					continue;
 				}
-			}else
-			{
+			}else{
 				position=i;
 			}
 		}
-		else
-		{
+		else if(tokens[position].type!='+'||tokens[position].type!='-'||tokens[position].type!='*'||tokens[position].type!='/'){
 		position=i;
 		}
 	}
@@ -231,14 +227,14 @@ static uint32_t eval(int p,int q){
 				uint32_t num;
 				sscanf(tokens[p].str,"%u",&num);
 				return num;
-				  }
-			  else if (check_parentheses(p, q) == true) {
+			}
+			else if (check_parentheses(p, q) == true) {
 					    /* The expression is surrounded by a matched pair of parentheses.
 							 *      * If that is the case, just throw away the parentheses.
 							 *           */
 					    return eval(p + 1, q - 1);
-							  }
-				  else {
+			}
+			else {
 								uint32_t val1;
 								uint32_t val2;
 								int op_position;
@@ -253,7 +249,7 @@ static uint32_t eval(int p,int q){
 											case '/': return val1/val2;
 											default: assert(0);
 											}
-								}
+			}
 }
 
 
