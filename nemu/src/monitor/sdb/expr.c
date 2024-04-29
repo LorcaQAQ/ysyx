@@ -227,9 +227,9 @@ static int eval(int p,int q){
 			 *           * Return the value of the number.
 			 *                */
 			int num;
-			sscanf(tokens[p].str,"%d",&num);
+			sscanf(tokens[q].str,"%d",&num);
 
-			if(tokens[p-1].type==NEG)
+			if(tokens[q-1].type==NEG)
 				return -num;
 			else
 				return num;
