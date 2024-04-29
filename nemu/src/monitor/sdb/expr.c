@@ -228,15 +228,8 @@ static int eval(int p,int q){
 			 *                */
 			int num;
 			sscanf(tokens[q].str,"%d",&num);
-
-			if(tokens[q-1].type==NEG)
-				return -num;
-			else
-				return num;
+			return num;
 			}
-		else if(tokens[p].type==NEG){
-			return -eval(p+1,q);
-		}
 		else if (check_parentheses(p, q) == true) {
 				/* The expression is surrounded by a matched pair of parentheses.
 				 *      * If that is the case, just throw away the parentheses.
@@ -252,6 +245,15 @@ static int eval(int p,int q){
 
 								val1 = eval(p, op_position - 1);
 								val2 = eval(op_position + 1, q);
+
+								if(tokens[p].type==NEG){
+									val1=-eval(p+1,op_position-1);
+								}
+
+								if(tokens[op_position+1].type==NEG){
+									val2=-eval(op_position+2,q);
+								}
+
 
 								switch (tokens[op_position].type) {
 											case '+': return val1 + val2;
