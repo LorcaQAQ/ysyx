@@ -37,10 +37,11 @@ static void gen_num();
 static void gen_rand_op();
 static int buf_index=0;
 static void gen_space();
+static void gen_negative();
 static void gen_rand_expr() {
 	int branch;
 		if(expr_len<=65532){
-			branch=choose(4);
+			branch=choose(5);
 		}else{
 			branch=0;
 		}
@@ -48,6 +49,7 @@ static void gen_rand_expr() {
 				  case 0: gen_num(); break;
 					case 1: expr_len+=3;gen('('); gen_rand_expr(); gen(')'); break;
 					case 2: expr_len+=2;gen_space();gen_rand_expr();break;
+					case 3: expr_len+=2;gen_negative();gen_rand_expr();break;
 					default: expr_len+=3;gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
 			}
 }
@@ -119,5 +121,10 @@ static void gen_space(){
 static int choose(int n){
 	int randnum=rand()%n;
 	return randnum;
+}
+
+static void gen_negative(){
+	buf[buf_index]='-';
+	buf_index++;
 }
 

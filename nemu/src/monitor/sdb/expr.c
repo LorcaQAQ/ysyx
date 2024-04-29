@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_NUM,TK_EQ,
+  TK_NOTYPE = 256, TK_NUM,TK_EQ,NEG
 
   /* TODO: Add more token types */
 
@@ -178,6 +178,7 @@ static bool check_parentheses(int p,int q){
 	return checked;
 }
 
+
 static int position_main_operator(int p,int q){
 	int position=q;
 	int mark=0;
@@ -216,32 +217,39 @@ static int position_main_operator(int p,int q){
 
 static int eval(int p,int q){	
 	  if (p > q) {
-			    printf("Bad expression\n");//
-					assert(0);												//
+			printf("Bad expression at p:%d and q:%d\n",p,q);//
+		  assert(0);												//
 				
-			  }
-		  else if (p == q) {
-				    /* Single token.
-						 *      * For now this token should be a number.
-						 *           * Return the value of the number.
-						 *                */
-				int num;
-				sscanf(tokens[p].str,"%d",&num);
-				return num;
+		}
+		else if (p == q) {
+			/* Single token.
+			 *      * For now this token should be a number.
+			 *           * Return the value of the number.
+			 *                */
+			int num;
+			sscanf(tokens[q].str,"%d",&num);
+			return num;
 			}
-			else if (check_parentheses(p, q) == true) {
-					    /* The expression is surrounded by a matched pair of parentheses.
-							 *      * If that is the case, just throw away the parentheses.
-							 *           */
-					    return eval(p + 1, q - 1);
-			}
-			else {
+		else if (check_parentheses(p, q) == true) {
+				/* The expression is surrounded by a matched pair of parentheses.
+				 *      * If that is the case, just throw away the parentheses.
+				 *           */
+			return eval(p + 1, q - 1);
+
+		}
+		else{
 								int val1;
 								int val2;
 								int op_position;
-						    op_position = position_main_operator(p,q);
-								val1 = eval(p, op_position - 1);
-								val2 = eval(op_position + 1, q);
+								op_position = position_main_operator(p,q);
+								if(op_position==q){
+									return -eval(p+1,q);
+								}
+								else{
+									val1 = eval(p, op_position - 1);
+									val2 = eval(op_position + 1, q);
+								}
+
 
 								switch (tokens[op_position].type) {
 											case '+': return val1 + val2;
@@ -262,6 +270,14 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
 	if(nr_token>0) nr_token--;
+	if (tokens[0].type=='-'){
+			tokens[0].type=NEG;
+		}
+	for(int i=1;i<nr_token;i++){
+		if(tokens[i].type=='-'&&!(tokens[i-1].type==TK_NUM||tokens[i-1].type==')')){
+			tokens[i].type=NEG;
+		}	
+	}
   int result;
 	result=eval(0,nr_token);	
 	return (word_t)result;
