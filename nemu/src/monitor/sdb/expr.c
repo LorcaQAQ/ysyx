@@ -241,20 +241,12 @@ static int eval(int p,int q){
 								int val1;
 								int val2;
 								int op_position;
-						    op_position = position_main_operator(p,q);
-
-
-								if(tokens[p].type==NEG){
-									val1=-eval(p+1,op_position-1);
+								op_position = position_main_operator(p,q);
+								if(op_position==q){
+									return -eval(p+1,q);
 								}
 								else{
 									val1 = eval(p, op_position - 1);
-								}
-
-								if(tokens[op_position+1].type==NEG){
-									val2=-eval(op_position+2,q);
-								}
-								else{
 									val2 = eval(op_position + 1, q);
 								}
 
