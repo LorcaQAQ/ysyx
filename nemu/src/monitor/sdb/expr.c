@@ -217,7 +217,7 @@ static int position_main_operator(int p,int q){
 
 static int eval(int p,int q){	
 	  if (p > q) {
-			printf("Bad expression\n");//
+			printf("Bad expression at p:%d and q:%d\n",p,q);//
 		  assert(0);												//
 				
 		}
@@ -250,7 +250,6 @@ static int eval(int p,int q){
 								int op_position;
 						    op_position = position_main_operator(p,q);
 
-								/*At the head of the expression, there is a negative symbol*/
 								val1 = eval(p, op_position - 1);
 								val2 = eval(op_position + 1, q);
 
