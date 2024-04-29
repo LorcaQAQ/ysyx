@@ -234,14 +234,14 @@ static int eval(int p,int q){
 			else
 				return num;
 			}
+		else if(tokens[p].type==NEG){
+			return -eval(p-1,q);
+		}
 		else if (check_parentheses(p, q) == true) {
 				/* The expression is surrounded by a matched pair of parentheses.
 				 *      * If that is the case, just throw away the parentheses.
 				 *           */
-			if(tokens[p-1].type==NEG)
-				return -eval(p + 1, q - 1);
-			else
-				return eval(p + 1, q - 1);
+			return eval(p + 1, q - 1);
 
 		}
 		else{
