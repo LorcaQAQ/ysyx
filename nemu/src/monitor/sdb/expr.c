@@ -235,7 +235,7 @@ static int eval(int p,int q){
 				return num;
 			}
 		else if(tokens[p].type==NEG){
-			return -eval(p-1,q);
+			return -eval(p+1,q);
 		}
 		else if (check_parentheses(p, q) == true) {
 				/* The expression is surrounded by a matched pair of parentheses.
