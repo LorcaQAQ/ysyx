@@ -35,6 +35,8 @@ word_t isa_reg_str2val(const char *s, bool *success) {
 	int count=sizeof(regs)/sizeof(regs[0]);
 	int i=0;
 	for(i=0;i<count;i++){
+		char *name;
+		strncpy(name,s+1,2);
 		if(strcmp(s,regs[i])==0){
 			break;
 		}
