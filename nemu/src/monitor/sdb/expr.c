@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_NUM,TK_EQ,NEG,REG,HEX,NEQ,LEQ,GEQ,OR,AND,NOT,LESS,GREATER
+  TK_NOTYPE = 256, TK_NUM,EQU,NEG,REG,HEX,NEQ,LEQ,GEQ,OR,AND,NOT,LESS,GREATER,DEREF
 
   /* TODO: Add more token types */
 
@@ -44,7 +44,7 @@ static struct rule {
 	{"\\(", '('},					// left bracket
 	{"\\)", ')'},					// right bracket
 	{"[0-9]+", TK_NUM},			// numbers 
-  {"==", TK_EQ},        // equal
+  {"==", EQU},        // equal
 	{"\\$[a-z]*[0-9]*",REG},		//reg
 	{"[0][xX0-9a-fA-F]+",HEX},//hex  
 	{"\\!=",NEQ},							//not equal
@@ -136,11 +136,61 @@ static bool make_token(char *e) {
 										 return false;
 									 }
 									 break;
-					case TK_EQ:
-									 tokens[nr_token].type=TK_EQ;
+					case EQU:
+									 tokens[nr_token].type=EQU;
 									 nr_token++;
 									 break;
-									
+					case REG:
+									 tokens[nr_token].type=REG;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case HEX:
+									 tokens[nr_token].type=HEX;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case NEQ:
+									 tokens[nr_token].type=NEQ;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case LEQ:
+									 tokens[nr_token].type=LEQ;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case GEQ:
+									 tokens[nr_token].type=GEQ;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case OR:
+									 tokens[nr_token].type=OR;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case AND:
+									 tokens[nr_token].type=AND;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case NOT:
+									 tokens[nr_token].type=NOT;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case LESS:
+									 tokens[nr_token].type=LESS;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+					case GREATER:
+									 tokens[nr_token].type=GREATER;
+									 strncpy(tokens[nr_token].str,&e[position-substr_len],substr_len);
+									 nr_token++;
+									 break;
+
           default: printf("There is no type corresponding to the expression[%d]\n",position);
 									 return false;
         }
@@ -198,7 +248,15 @@ static int position_main_operator(int p,int q){
 			mark++;
 		else if(tokens[i].type=='(')
 			mark--;
-		if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
+		if((tokens[i].type==AND||tokens[i].type==AND)&&mark==0){//the token is &&,||
+			position=i;
+			break;
+		}
+		else if((tokens[i].type==EQU||tokens[i].type==NEQ||tokens[i].type==LEQ||tokens[i].type==GEQ||tokens[i].type==LESS||tokens[i].type==GREATER)&&mark==0){
+			position=i;
+			break;
+		}
+		else if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
 		{//the tokens is +,-,*,/ and it is not within parenthese.
 			if(tokens[position].type=='+'||tokens[position].type=='-'){
 				//if the token i have chosen is + or -
@@ -237,23 +295,41 @@ static int eval(int p,int q){
 			 *           * Return the value of the number.
 			 *                */
 			int num;
-			sscanf(tokens[q].str,"%d",&num);
-			return num;
+			switch(tokens[q].type){
+				case TK_NUM:
+					sscanf(tokens[q].str,"%d",&num);
+					return num;
+				case REG:
+					bool success;
+					num=isa_reg_str2val(tokens[q].str,&success);
+					if(success==false){
+						printf("False return val from register\n");
+						assert(0);
+					}
+					return num;
+				case HEX:
+					num=strtol(tokens[q].str,NULL,16);
+					return num;
+				default:printf("There doesn't exist any type to match the token");assert(0);
 			}
+		}
 		else if (check_parentheses(p, q) == true) {
 				/* The expression is surrounded by a matched pair of parentheses.
 				 *      * If that is the case, just throw away the parentheses.
 				 *           */
+
 			return eval(p + 1, q - 1);
 
 		}
 		else{
-								int val1;
-								int val2;
+								int val1=1;
+								int val2=1;
 								int op_position;
 								op_position = position_main_operator(p,q);
 								if(op_position==q){
-									return -eval(p+1,q);
+									switch(tokens[p].type){
+										case NEG: return -eval(p+1,q);
+									}
 								}
 								else{
 									val1 = eval(p, op_position - 1);
@@ -266,6 +342,14 @@ static int eval(int p,int q){
 											case '-': return val1 - val2;
 											case '*': return val1*val2;
 											case '/': return val1/val2;
+											case EQU: return val1==val2;
+											case NEQ: return val1!=val2;
+											case LEQ: return val1<=val2;
+											case GEQ: return val1>=val2;
+											case OR:  return val1||val2;
+											case AND: return val1&&val2;
+											case LESS:return val1<val2;
+											case GREATER: return val1>val2;
 											default: assert(0);
 											}
 			}
@@ -286,6 +370,11 @@ word_t expr(char *e, bool *success) {
 	for(int i=1;i<nr_token;i++){
 		if(tokens[i].type=='-'&&!(tokens[i-1].type==TK_NUM||tokens[i-1].type==')')){
 			tokens[i].type=NEG;
+		}	
+	}
+	for(int i=0;i<nr_token;i++){
+		if(tokens[i].type=='*'&&(i==0||!(tokens[i-1].type==TK_NUM||tokens[i-1].type==')'||tokens[i-1].type==REG||tokens[i-1].type==HEX))){
+			tokens[i].type=DEREF;
 		}	
 	}
   int result;
