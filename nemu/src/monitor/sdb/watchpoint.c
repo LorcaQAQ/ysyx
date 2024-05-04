@@ -17,14 +17,22 @@
 
 #define NR_WP 32
 
+
 typedef struct watchpoint {
   int NO;
   struct watchpoint *next;
+  char expr[66532];
+  word_t value;
+
 
   /* TODO: Add more members if necessary */
 
 } WP;
 
+
+
+WP *new_wp();
+void free_wp(WP* wp);
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
 
@@ -40,4 +48,26 @@ void init_wp_pool() {
 }
 
 /* TODO: Implement the functionality of watchpoint */
+WP *new_wp(){
+	if(free_==NULL){
+		printf("There is no free space to save a watchpoint!\n");
+		assert(0);
+		return NULL;
+	}else{
+	WP* wp=free_;
+	free_ = free_->next;
+	return wp;
+	}
+}
+
+void free_wp(WP* wp) {
+	if (free_ != NULL) {
+		wp->next = free_->next;
+		free_->next = wp;
+	}
+	else {
+		free_ = wp;
+		free_->next = NULL;
+	}
+}
 
