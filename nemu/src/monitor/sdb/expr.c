@@ -258,14 +258,16 @@ static int position_main_operator(int p,int q){
 		}
 		else if((tokens[i].type=='+'||tokens[i].type=='-'||tokens[i].type=='*'||tokens[i].type=='/')&&mark==0)
 		{//the tokens is +,-,*,/ and it is not within parenthese.
-			if(tokens[position].type=='+'||tokens[position].type=='-'){
-				//if the token i have chosen is + or -
-				continue;
+			if(tokens[i].type=='+'||tokens[i].type=='-'){
+				//if the token i is + or -
+				position=i;
+				break;
 			}
 			else if(tokens[position].type=='*'||tokens[position].type=='/'){
 				//if the token i have chosen is * or /
 				if(tokens[i].type=='+'||tokens[i].type=='-'){
 					position=i;
+					break;
 				}
 				else {
 					continue;
@@ -273,9 +275,6 @@ static int position_main_operator(int p,int q){
 			}else{
 				position=i;
 			}
-		}
-		else{
-			continue;
 		}
 	}
 	return position;
