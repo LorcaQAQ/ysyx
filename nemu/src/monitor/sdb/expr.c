@@ -19,7 +19,7 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-
+#include <memory/paddr.h>
 enum {
   TK_NOTYPE = 256, TK_NUM,EQU,NEG,REG,HEX,NEQ,LEQ,GEQ,OR,AND,NOT,LESS,GREATER,DEREF
 
@@ -328,6 +328,7 @@ static int eval(int p,int q){
 								if(op_position==q){
 									switch(tokens[p].type){
 										case NEG: return -eval(p+1,q);
+										case DEREF: return paddr_read(eval(p+1,q),4);
 									}
 								}
 								else{
