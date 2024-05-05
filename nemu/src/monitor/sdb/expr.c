@@ -308,6 +308,7 @@ static int eval(int p,int q){
 					return num;
 				case HEX:
 					num=strtol(tokens[q].str,NULL,16);
+					printf("num is:%x",num);
 					return num;
 				default:printf("There doesn't exist any type to match the token");assert(0);
 			}
