@@ -40,7 +40,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   for (WP* cur = head; cur != NULL; cur = cur->next) {
-    bool success = false;
+    bool success = true;
     word_t value = expr(cur->expr, &success);
     if(success){
         cur->old_value = cur->new_value;
