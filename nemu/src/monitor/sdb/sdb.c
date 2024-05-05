@@ -92,19 +92,38 @@ static int cmd_x(char *args){
 		}
 	return 0;
 	}
-
+	
+static int cmd_d(char* args) {
+    if (args == NULL)
+        printf("No args for delete watchpoint.\n");
+    else {
+        delete_watchpoint(atoi(args));
+    }
+    return 0;
+}
+static int cmd_w(char* args) {
+    if (args == NULL)
+        printf("No args for create watchpoint.\n");
+    else {
+        create_watchpoint(args);
+    }
+    return 0;
+}
 static struct {
-  const char *name;
-  const char *description;
-  int (*handler) (char *);
-} cmd_table [] = {
+    const char* name;
+    const char* description;
+    int (*handler) (char*);
+} cmd_table[] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "Single step execution",cmd_si},
-	{ "info","Print program state",cmd_info},
-	{ "x", "Scan memory",cmd_x},
-  /* TODO: Add more commands */
+  { "info","Print program state",cmd_info},
+  { "x", "Scan memory",cmd_x},
+  { "d", "Delete watchpoint",cmd_d},
+  { "w", "Set watchpoint",cmd_w},
+
+    /* TODO: Add more commands */
 
 };
 
