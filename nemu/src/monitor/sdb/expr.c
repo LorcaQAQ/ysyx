@@ -43,7 +43,7 @@ static struct rule {
 	{"\\/",   '/'},	        // division
 	{"\\(", '('},					// left bracket
 	{"\\)", ')'},					// right bracket
-	{"^[0-9]+$", TK_NUM},			// numbers 
+	{"[0-9]+", TK_NUM},			// numbers 
   {"==", EQU},        // equal
 	{"\\${1,2}[a-z]*[0-9]*",REG},		//reg
 	{"[0][xX0-9a-fA-F]+",HEX},//hex  
