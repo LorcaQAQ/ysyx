@@ -25,12 +25,28 @@ const char *regs[] = {
 
 void isa_reg_display() {
 	int count=sizeof(regs)/sizeof(regs[0]);
-	printf("---Print all the register---/n");
+	printf("---Print all the register---\n");
 	for(int i=0;i<count;i++){
-		printf("$%s=%d\n",regs[i],cpu.gpr[i]);
+		printf("$%s=%u\n",regs[i],cpu.gpr[i]);
 	}
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+	int count=sizeof(regs)/sizeof(regs[0]);
+	int i=0;
+	for(i=0;i<count;i++){
+		char name[3];
+		strncpy(name,s+1,2);
+		name[2]='\0';
+		if(strcmp(name,regs[i])==0){
+			break;
+		}
+	}
+	if(i<count){
+		*success=true;
+	}
+	else{
+		*success=false;
+	}
+  return cpu.gpr[i];
 }
