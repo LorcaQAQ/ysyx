@@ -211,7 +211,6 @@ void create_watchpoint(char* args) {
     wp_num++;
 }
 void display_watchpoint() {
-    bool flag = true;
     if (head == NULL) {
         printf("No watchpoint has been set\n");
     }
@@ -220,5 +219,4 @@ void display_watchpoint() {
             printf("Watchpoint.\tNo: %d,\t expr = \"%s\"\n", cur->NO, cur->expr);
         }
     }
-    if (flag) printf("No watchpoint now.\n");
 }
