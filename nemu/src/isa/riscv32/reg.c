@@ -37,6 +37,7 @@ word_t isa_reg_str2val(const char *s, bool *success) {
 	for(i=0;i<count;i++){
 		char name[3];
 		strncpy(name,s+1,2);
+		name[2]='\0';
 		if(strcmp(name,regs[i])==0){
 			break;
 		}
