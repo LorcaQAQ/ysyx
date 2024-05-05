@@ -25,7 +25,10 @@ static int is_batch_mode = false;
 void init_regex();
 void init_wp_pool();
 static int cmd_help(char *args);
-void sdb_watchpoint_display();
+void display_watchpoint();
+void create_watchpoint(char* args);
+void delete_watchpoint(int no);
+static int wp_num = 0;
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -71,8 +74,8 @@ static int cmd_info(char *args){
 		printf("No argument");
 	else if(strcmp(args,"r")==0)
 		isa_reg_display();
-	//else if(strcmp(args,"w")==0)
-		//sdb_watchpoint_display();
+	else if(strcmp(args,"w")==0)
+		display_watchpoint(atoi(args));
 	return 0;
 }
 //scan  register
@@ -178,4 +181,44 @@ void init_sdb() {
 
   /* Initialize the watchpoint pool. */
   init_wp_pool();
+}
+
+void delete_watchpoint(int no) {
+    if (head == NULL) {
+        printf("No watchpoint has been set\n");
+    }
+    else {
+        for (WP* cur = head; cur != NULL; cur = cur->next) {
+            if (cur->NO == no) {
+                free_wp(cur);
+                printf("The watchpoint %d has been deleted\n",no);
+                break;
+            }
+        }
+    }
+}
+void create_watchpoint(char* args) {
+    WP* wp = new_wp();
+    strcpy(wp->expr, args);
+    //bool success = false;
+    //word_t tmp = expr(p->expr, &success);
+    //if (success) {
+        //wp->value = tmp;
+        wp->NO = wp_num;
+   // }
+    //else printf("Something wrong happens when 'expr' works\n");
+    printf("Create watchpoint No.%d success.\n", wp->NO);
+    wp_num++;
+}
+void display_watchpoint() {
+    bool flag = true;
+    if (head == NULL) {
+        printf("No watchpoint has been set\n");
+    }
+    else {
+        for (WP* cur = head; cur != NULL; cur = cur->next) {
+            printf("Watchpoint.\tNo: %d,\t expr = \"%s\"\n", cur->NO, cur->expr);
+        }
+    }
+    if (flag) printf("No watchpoint now.\n");
 }
