@@ -220,6 +220,8 @@ void create_watchpoint(char* args) {
     WP* wp = new_wp();
     strcpy(wp->expr, args);
     wp->NO = wp_num;
+    wp->old_value=0;
+    wp->new_value=0;
     printf("Create watchpoint No.%d success.\n", wp->NO);
     wp_num++;
 }
