@@ -47,7 +47,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
         cur->new_value = value;
         if (cur->new_value != cur->old_value) {
             nemu_state.state = NEMU_STOP;
-            printf("Detect changes in No.%d watchpoint:\t\"%s\"\n", cur->NO, cur->expr);
+            printf("Detect changes in No.%d watchpoint:\"%s\"\n", cur->NO, cur->expr);
         }
     }else {
             printf("Expression error!\n");
