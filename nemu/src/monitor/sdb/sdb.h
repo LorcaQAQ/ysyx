@@ -22,13 +22,14 @@ word_t expr(char *e, bool *success);
 
 #define NR_WP 32
 typedef struct watchpoint {
-  int NO;
-  struct watchpoint *next;
-  char expr[66532];
-  word_t value;
+	int NO;
+	struct watchpoint* next;
+	char expr[66532];
+	word_t old_value;
+	word_t new_value;
 
 
-  /* TODO: Add more members if necessary */
+	/* TODO: Add more members if necessary */
 
 } WP;
 WP *new_wp();
