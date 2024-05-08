@@ -252,7 +252,11 @@ static int position_main_operator(int p,int q){
 			position=i;
 			break;
 		}
-		else if((tokens[i].type==EQU||tokens[i].type==NEQ||tokens[i].type==LEQ||tokens[i].type==GEQ||tokens[i].type==LESS||tokens[i].type==GREATER)&&mark==0){
+		else if((tokens[i].type==EQU||tokens[i].type==NEQ)&&mark==0){
+			position=i;
+			break;
+		}
+		else if((tokens[i].type==LEQ||tokens[i].type==GEQ||tokens[i].type==LESS||tokens[i].type==GREATER)&&mark==0){
 			position=i;
 			break;
 		}
