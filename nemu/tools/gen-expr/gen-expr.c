@@ -31,17 +31,25 @@ static char *code_format =
 "  return 0; "
 "}";
 static int expr_len=0;
+static int and_or_num=0;
+static int equ_num=0;
 static int choose(int n);
 static void gen(char bracket);
 static void gen_num();
 static void gen_rand_op();
 static int buf_index=0;
 static void gen_space();
-static void gen_negative();
+//static void gen_negative();
+static void gen_rand_logic_not();
+static void gen_rand_logic_op();
+static void gen_rand_and_or_op();
 static void gen_rand_expr() {
 	int branch;
 		if(expr_len<=65532){
-			branch=choose(5);
+			if(equ_num>=2)
+				branch=choose(5);
+			else
+				branch=choose(7);
 		}else{
 			branch=0;
 		}
@@ -49,11 +57,12 @@ static void gen_rand_expr() {
 				  case 0: gen_num(); break;
 					case 1: expr_len+=3;gen('('); gen_rand_expr(); gen(')'); break;
 					case 2: expr_len+=2;gen_space();gen_rand_expr();break;
-					case 3: expr_len+=2;gen_negative();gen_rand_expr();break;
-					default: expr_len+=3;gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+					case 3: expr_len+=2; gen_rand_logic_not();gen_rand_expr();break;
+					case 4: expr_len+=3;gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+					case 5: equ_num+=1;expr_len += 10; gen_rand_expr(); gen_rand_logic_op(); gen_rand_expr(); gen_rand_and_or_op();gen_rand_expr();gen_rand_logic_op();gen_rand_expr();break;
+					default:and_or_num+=1;expr_len += 4; gen_rand_expr(); gen_rand_and_or_op(); gen_rand_expr(); break;
 			}
 }
-
 
 int main(int argc, char *argv[]) {
   int seed = time(0);
@@ -65,6 +74,8 @@ int main(int argc, char *argv[]) {
   int i;
   for (i = 0; i < loop; i ++) {
     buf_index=0;
+    and_or_num=0;
+    equ_num=0;
 		expr_len=0;
     gen_rand_expr();
 		buf[buf_index]='\0';
@@ -123,8 +134,27 @@ static int choose(int n){
 	return randnum;
 }
 
-static void gen_negative(){
+/*static void gen_negative(){
 	buf[buf_index]='-';
 	buf_index++;
+}*/
+static void gen_rand_logic_op() {
+	switch (choose(6)) {
+	case 0:buf[buf_index++] = '>'; buf[buf_index++] = '='; break;
+	case 1:buf[buf_index++] = '<'; buf[buf_index++] = '='; break;
+	case 2:buf[buf_index++] = '='; buf[buf_index++] = '='; break;
+	case 3:buf[buf_index++] = '!'; buf[buf_index++] = '='; break;
+	case 4:buf[buf_index++] = '>'; break;
+	default:buf[buf_index++] = '<'; break;
+	}
+}
+static void gen_rand_and_or_op() {
+	switch (choose(2)) {
+	case 0:buf[buf_index++] = '|';buf[buf_index++] = '|'; break;
+	default:buf[buf_index++] = '&'; buf[buf_index++] = '&';break;
+	}
+}
+static void gen_rand_logic_not() {
+	buf[buf_index++] = '!';
 }
 
