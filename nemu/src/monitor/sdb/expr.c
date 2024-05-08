@@ -330,6 +330,7 @@ static int eval(int p,int q){
 									switch(tokens[p].type){
 										case NEG: return -eval(p+1,q);
 										case DEREF: return paddr_read(eval(p+1,q),4);
+										case NOT: return !eval(p+1,q);
 									}
 								}
 								else{
