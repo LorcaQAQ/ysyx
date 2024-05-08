@@ -54,7 +54,7 @@ static struct rule {
 	{"\\|\\|",OR},						//logic or
 	{"\\&\\&",AND},						//logic and
 	{"\\!",NOT},							//logic not
-	{"\\<",LESS},							//LESS		
+	{"<",LESS},							//LESS		
 	{">",GREATER},					//GREATER
 };
 
