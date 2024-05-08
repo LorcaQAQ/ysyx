@@ -45,14 +45,13 @@ static struct rule {
 	{"\\)", ')'},					// right bracket
 	{"[0][xX0-9a-fA-F]+",HEX},//hex  
 	{"[0-9]+", TK_NUM},			// numbers 
-  {"\\=\\=", EQU},        // equal
+  {"==", EQU},        // equal
 	{"\\${1,2}[a-z]*[0-9]*",REG},		//reg
-	
-	{"\\!\\=",NEQ},							//not equal
+	{"!=",NEQ},							//not equal
 	{"<=",LEQ},   				//less than or euqal
 	{">=",GEQ}, 					//greater or equal
 	{"\\|\\|",OR},						//logic or
-	{"\\&\\&",AND},						//logic and
+	{"&&",AND},						//logic and
 	{"!",NOT},							//logic not
 	{"<",LESS},							//LESS		
 	{">",GREATER},					//GREATER
