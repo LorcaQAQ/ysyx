@@ -49,7 +49,7 @@ static struct rule {
 	{"\\${1,2}[a-z]*[0-9]*",REG},		//reg
 	
 	{"\\!\\=",NEQ},							//not equal
-	{"\\<\\=",LEQ},   				//less than or euqal
+	{"<=",LEQ},   				//less than or euqal
 	{">=",GEQ}, 					//greater or equal
 	{"\\|\\|",OR},						//logic or
 	{"\\&\\&",AND},						//logic and
