@@ -55,7 +55,7 @@ static struct rule {
 	{"\\&\\&",AND},						//logic and
 	{"\\!",NOT},							//logic not
 	{"\\<",LESS},							//LESS		
-	{"\\>",GREATER},					//GREATER
+	{">",GREATER},					//GREATER
 };
 
 #define NR_REGEX ARRLEN(rules)
