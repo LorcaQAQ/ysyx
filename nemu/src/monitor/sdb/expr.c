@@ -251,7 +251,7 @@ static int position_main_operator(int p, int q) {
 		else if (tokens[i].type == '(')
 			mark--;
 		if (mark == 0) {
-			if (tokens[i].type == AND || tokens[i].type == AND) {//the token is &&,||
+			if (tokens[i].type == AND || tokens[i].type == OR) {//the token is &&,||
 				position = i;
 				break;
 			}
