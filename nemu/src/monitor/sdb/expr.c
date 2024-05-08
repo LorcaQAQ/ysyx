@@ -48,12 +48,12 @@ static struct rule {
   {"==", EQU},        // equal
 	{"\\${1,2}[a-z]*[0-9]*",REG},		//reg
 	
-	{"\\!=",NEQ},							//not equal
+	{"!=",NEQ},							//not equal
 	{"<=",LEQ},   				//less than or euqal
 	{">=",GEQ}, 					//greater or equal
 	{"\\|\\|",OR},						//logic or
 	{"\\&\\&",AND},						//logic and
-	{"\\!",NOT},							//logic not
+	{"!",NOT},							//logic not
 	{"<",LESS},							//LESS		
 	{">",GREATER},					//GREATER
 };
