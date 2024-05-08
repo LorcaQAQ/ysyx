@@ -46,7 +46,7 @@ static void gen_rand_and_or_op();
 static void gen_rand_expr() {
 	int branch;
 		if(expr_len<=65532){
-			if(equ_num>=3)
+			if(equ_num>=2)
 				branch=choose(5);
 			else
 				branch=choose(7);
