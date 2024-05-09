@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
 	/*	To check expression value */
 	FILE *fp;
-	fp=fopen("./src/logic_expr_no_arithmatic.txt","r");
+	fp=fopen("./src/logic_expr_no_arithmetic.txt","r");
 	assert(fp!=NULL);
 	for(int i=0;!feof(fp);i++){
 		word_t true_result;
