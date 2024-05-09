@@ -340,12 +340,11 @@ static int eval(int p, int q) {
 		case '+': return val1 + val2;
 		case '-': return val1 - val2;
 		case '*': return (int)(val1 * val2);
-		case '/': int val;
+		case '/': 
 							if(val2!=0) 
-								val=val1 / val2;
+								return val1 / val2;
 							else
-								val=0;
-							return val;
+								return 0;
 		case EQU: return val1 == val2;
 		case NEQ: return val1 != val2;
 		case LEQ: return val1 <= val2;
