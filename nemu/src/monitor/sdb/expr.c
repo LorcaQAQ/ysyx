@@ -339,8 +339,8 @@ static int eval(int p, int q) {
 		switch (tokens[op_position].type) {
 		case '+': return val1 + val2;
 		case '-': return val1 - val2;
-		case '*': return (int)val1 * val2;
-		case '/': return (int)val1 / val2;
+		case '*': return (int)(val1 * val2);
+		case '/': return (int)(val1 / val2);
 		case EQU: return val1 == val2;
 		case NEQ: return val1 != val2;
 		case LEQ: return val1 <= val2;
