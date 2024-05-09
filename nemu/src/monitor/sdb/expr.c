@@ -344,7 +344,7 @@ static int eval(int p, int q) {
 							if(val2!=0) 
 								val=val1 / val2;
 							else
-								val=1;
+								val=0;
 							return val;
 		case EQU: return val1 == val2;
 		case NEQ: return val1 != val2;
