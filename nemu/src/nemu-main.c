@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
 	/*	To check expression value */
 	FILE *fp;
-	fp=fopen("./src/input.txt","r");
+	fp=fopen("./src/input_inc_neg.txt","r");
 	assert(fp!=NULL);
 	for(int i=0;!feof(fp);i++){
 		word_t true_result;
