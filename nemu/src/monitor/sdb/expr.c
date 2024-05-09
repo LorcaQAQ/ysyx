@@ -256,11 +256,11 @@ static int position_main_operator(int p, int q) {
 				break;
 			}
 			else if (tokens[i].type == AND) {
-				if (position == q || tokens[position].type == EQU || tokens[position].type == NEQ||tokens[position].type == LEQ || tokens[position].type == GEQ || tokens[position].type == LESS || tokens[position].type == GREATER || tokens[i].type == '+' || tokens[i].type == '-' || tokens[i].type == '*' || tokens[i].type == '/')
+				if (position == q || tokens[position].type == EQU || tokens[position].type == NEQ||tokens[position].type == LEQ || tokens[position].type == GEQ || tokens[position].type == LESS || tokens[position].type == GREATER || tokens[position].type == '+' || tokens[position].type == '-' || tokens[position].type == '*' || tokens[position].type == '/')
 					position = i;
 			}
 			else if (tokens[i].type == EQU || tokens[i].type == NEQ) {
-				if (position == q || tokens[position].type == LEQ || tokens[position].type == GEQ || tokens[position].type == LESS || tokens[position].type == GREATER || tokens[i].type == '+' || tokens[i].type == '-' || tokens[i].type == '*' || tokens[i].type == '/')
+				if (position == q || tokens[position].type == LEQ || tokens[position].type == GEQ || tokens[position].type == LESS || tokens[position].type == GREATER || tokens[position].type == '+' || tokens[position].type == '-' || tokens[position].type == '*' || tokens[position].type == '/')
 					position = i;
 			}
 			else if (tokens[i].type == LEQ || tokens[i].type == GEQ || tokens[i].type == LESS || tokens[i].type == GREATER) {
