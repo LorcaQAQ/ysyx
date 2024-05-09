@@ -251,9 +251,13 @@ static int position_main_operator(int p, int q) {
 		else if (tokens[i].type == '(')
 			mark--;
 		if (mark == 0) {
-			if (tokens[i].type == AND || tokens[i].type == OR) {//the token is &&,||
+			if (tokens[i].type == OR) {//the token is &&,||
 				position = i;
 				break;
+			}
+			else if (tokens[i].type == AND) {
+				if (position == q || tokens[position].type == EQU || tokens[position].type == NEQ||tokens[position].type == LEQ || tokens[position].type == GEQ || tokens[position].type == LESS || tokens[position].type == GREATER || tokens[i].type == '+' || tokens[i].type == '-' || tokens[i].type == '*' || tokens[i].type == '/')
+					position = i;
 			}
 			else if (tokens[i].type == EQU || tokens[i].type == NEQ) {
 				if (position == q || tokens[position].type == LEQ || tokens[position].type == GEQ || tokens[position].type == LESS || tokens[position].type == GREATER || tokens[i].type == '+' || tokens[i].type == '-' || tokens[i].type == '*' || tokens[i].type == '/')
@@ -277,7 +281,7 @@ static int position_main_operator(int p, int q) {
 	}
 	return position;
 }
-	
+
 
 
 static int eval(int p, int q) {
@@ -340,11 +344,11 @@ static int eval(int p, int q) {
 		case '+': return val1 + val2;
 		case '-': return val1 - val2;
 		case '*': return (int)(val1 * val2);
-		case '/': 
-							if(val2!=0) 
-								return val1 / val2;
-							else
-								return 0;
+		case '/':
+			if (val2 != 0)
+				return val1 / val2;
+			else
+				return 0;
 		case EQU: return val1 == val2;
 		case NEQ: return val1 != val2;
 		case LEQ: return val1 <= val2;
