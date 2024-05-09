@@ -152,42 +152,34 @@ static bool make_token(char* e) {
 					break;
 				case NEQ:
 					tokens[nr_token].type = NEQ;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 				case LEQ:
 					tokens[nr_token].type = LEQ;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 				case GEQ:
 					tokens[nr_token].type = GEQ;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 				case OR:
 					tokens[nr_token].type = OR;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 				case AND:
 					tokens[nr_token].type = AND;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 				case NOT:
 					tokens[nr_token].type = NOT;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 				case LESS:
 					tokens[nr_token].type = LESS;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 				case GREATER:
 					tokens[nr_token].type = GREATER;
-					strncpy(tokens[nr_token].str, &e[position - substr_len], substr_len);
 					nr_token++;
 					break;
 
