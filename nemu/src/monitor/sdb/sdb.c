@@ -82,14 +82,20 @@ static int cmd_info(char *args){
 static int cmd_x(char *args){
 	char *len_str=strtok(args," ");
 	char *addr_str=strtok(NULL," ");
+	bool success=true;
 	int len=0;
-	int addr=0;
+	word_t addr=0;
 	sscanf(len_str,"%d",&len);
-	sscanf(addr_str,"%x",&addr);
-	for(int i=0;i<len;i++){
-		printf("$%x=%x\n",addr,paddr_read(addr,4));
-		addr=addr+4;
-		}
+	addr=expr(addr_str,&success);
+	if(success){
+		for(int i=0;i<len;i++){
+			printf("$%x=%x\n",addr,paddr_read(addr,4));
+			addr=addr+4;
+			}
+	}
+	else{
+		printf("The expression isn't correct!\n");
+	}
 	return 0;
 	}
 	
