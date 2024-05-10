@@ -82,17 +82,37 @@ static int cmd_info(char *args){
 static int cmd_x(char *args){
 	char *len_str=strtok(args," ");
 	char *addr_str=strtok(NULL," ");
+	bool success=true;
 	int len=0;
-	int addr=0;
+	word_t addr=0;
 	sscanf(len_str,"%d",&len);
-	sscanf(addr_str,"%x",&addr);
-	for(int i=0;i<len;i++){
-		printf("$%x=%x\n",addr,paddr_read(addr,4));
-		addr=addr+4;
-		}
+	addr=expr(addr_str,&success);
+	if(success){
+		for(int i=0;i<len;i++){
+			printf("$%x=%x\n",addr,paddr_read(addr,4));
+			addr=addr+4;
+			}
+	}
+	else{
+		printf("The expression cannot be identified!\n");
+	}
 	return 0;
 	}
-	
+//expression evaluation
+static int cmd_p(char* args) {
+    if (args == NULL)
+        printf("No args for expression evaluation.\n");
+    else {
+			bool success=true;
+			word_t value=expr(args,&success);
+			if(success)
+				printf("The vaule of expression \"%s\" is:%u\n",args,value);
+			else
+				printf("The expression cannot be identified!\n");
+    }
+    return 0;
+}
+
 static int cmd_d(char* args) {
     if (args == NULL)
         printf("No args for delete watchpoint.\n");
@@ -118,8 +138,9 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "Single step execution",cmd_si},
-  { "info","Print program state",cmd_info},
+  { "info","Print program status",cmd_info},
   { "x", "Scan memory",cmd_x},
+	{	"p", "Expression evaluation",cmd_p},
   { "d", "Delete watchpoint",cmd_d},
   { "w", "Set watchpoint",cmd_w},
 
