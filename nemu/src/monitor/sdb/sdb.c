@@ -94,11 +94,25 @@ static int cmd_x(char *args){
 			}
 	}
 	else{
-		printf("The expression isn't correct!\n");
+		printf("The expression cannot be identified!\n");
 	}
 	return 0;
 	}
-	
+//expression evaluation
+static int cmd_p(char* args) {
+    if (args == NULL)
+        printf("No args for expression evaluation.\n");
+    else {
+			bool success=true;
+			word_t value=expr(args,&success);
+			if(success)
+				printf("The vaule of expression \"%s\" is:%u",args,value);
+			else
+				printf("The expression cannot be identified!\n");
+    }
+    return 0;
+}
+
 static int cmd_d(char* args) {
     if (args == NULL)
         printf("No args for delete watchpoint.\n");
@@ -126,6 +140,7 @@ static struct {
   { "si", "Single step execution",cmd_si},
   { "info","Print program state",cmd_info},
   { "x", "Scan memory",cmd_x},
+	{	"p", "Expression evaluation",cmd_p},
   { "d", "Delete watchpoint",cmd_d},
   { "w", "Set watchpoint",cmd_w},
 
