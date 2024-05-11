@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   engine_start();
 
 	/*	To check expression value */
-	FILE *fp;
+	/*FILE *fp;
 	fp=fopen("./src/input.txt","r");
 	assert(fp!=NULL);
 	for(int i=0;!feof(fp);i++){
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 			printf("All the expression have been read.\n");
 		}
 	}
-	fclose(fp);
+	fclose(fp);*/
 
 
   return is_exit_status_bad();
