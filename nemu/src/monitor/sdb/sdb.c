@@ -18,11 +18,17 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/paddr.h>
 
 static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+static int cmd_help(char *args);
+void display_watchpoint();
+void create_watchpoint(char* args);
+void delete_watchpoint(int no);
+static int wp_num = 0;
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -52,19 +58,93 @@ static int cmd_q(char *args) {
 	nemu_state.state=NEMU_QUIT;
   return -1;
 }
+//single step execution
+static int cmd_si(char *args) {
+	int steps=0;
+	if(args==NULL)
+		steps=1;
+	else
+		sscanf(args,"%d",&steps);
+	cpu_exec(steps);
+	return 0;
+}
 
-static int cmd_help(char *args);
+static int cmd_info(char *args){
+	if(args==NULL)
+		printf("No argument");
+	else if(strcmp(args,"r")==0)
+		isa_reg_display();
+	else if(strcmp(args,"w")==0)
+		display_watchpoint(atoi(args));
+	return 0;
+}
+//scan  register
+static int cmd_x(char *args){
+	char *len_str=strtok(args," ");
+	char *addr_str=strtok(NULL," ");
+	bool success=true;
+	int len=0;
+	word_t addr=0;
+	sscanf(len_str,"%d",&len);
+	addr=expr(addr_str,&success);
+	if(success){
+		for(int i=0;i<len;i++){
+			printf("$%x=%x\n",addr,paddr_read(addr,4));
+			addr=addr+4;
+			}
+	}
+	else{
+		printf("The expression cannot be identified!\n");
+	}
+	return 0;
+	}
+//expression evaluation
+static int cmd_p(char* args) {
+    if (args == NULL)
+        printf("No args for expression evaluation.\n");
+    else {
+			bool success=true;
+			word_t value=expr(args,&success);
+			if(success)
+				printf("The vaule of expression \"%s\" is:%u\n",args,value);
+			else
+				printf("The expression cannot be identified!\n");
+    }
+    return 0;
+}
 
+static int cmd_d(char* args) {
+    if (args == NULL)
+        printf("No args for delete watchpoint.\n");
+    else {
+        delete_watchpoint(atoi(args));
+    }
+    return 0;
+}
+static int cmd_w(char* args) {
+    if (args == NULL)
+        printf("No args for create watchpoint.\n");
+    else {
+        create_watchpoint(args);
+    }
+    return 0;
+}
 static struct {
-  const char *name;
-  const char *description;
-  int (*handler) (char *);
-} cmd_table [] = {
+    const char* name;
+    const char* description;
+    int (*handler) (char*);
+} cmd_table[] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "si", "Single step execution",cmd_si},
+  { "info","Print program status",cmd_info},
+  { "x", "Scan memory",cmd_x},
+	{	"p", "Expression evaluation",cmd_p},
+  { "d", "Delete watchpoint",cmd_d},
+  { "w", "Set watchpoint",cmd_w},
 
-  /* TODO: Add more commands */
+    /* TODO: Add more commands */
 
 };
 
@@ -141,4 +221,38 @@ void init_sdb() {
 
   /* Initialize the watchpoint pool. */
   init_wp_pool();
+}
+
+void delete_watchpoint(int no) {
+    if (head == NULL) {
+        printf("No watchpoint has been set\n");
+    }
+    else {
+        for (WP* cur = head; cur != NULL; cur = cur->next) {
+            if (cur->NO == no) {
+                free_wp(cur);
+                printf("The watchpoint %d has been deleted\n",no);
+                break;
+            }
+        }
+    }
+}
+void create_watchpoint(char* args) {
+    WP* wp = new_wp();
+    strcpy(wp->expr, args);
+    wp->NO = wp_num;
+    wp->old_value=0;
+    wp->new_value=0;
+    printf("Create watchpoint No.%d success.\n", wp->NO);
+    wp_num++;
+}
+void display_watchpoint() {
+    if (head == NULL) {
+        printf("No watchpoint has been set\n");
+    }
+    else {
+        for (WP* cur = head; cur != NULL; cur = cur->next) {
+            printf("Watchpoint.\tNo: %d,\t expr = \"%s\"\n", cur->NO, cur->expr);
+        }
+    }
 }
