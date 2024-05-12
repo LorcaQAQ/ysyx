@@ -37,7 +37,6 @@ $(BIN): $(VSOURCES) $(SIM_SRCS) $(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
-
 all: default
 	@echo "Write this Makefile by your self."
 
@@ -51,5 +50,4 @@ clean:
 include ../Makefile
 
 .PHONY:default all clean sim
-
 
