@@ -191,6 +191,10 @@ config DIFFTEST_REF_NAME
   default "kvm" if DIFFTEST_REF_KVM
   default "spike" if DIFFTEST_REF_SPIKE
   default "none"
+
+config WATCHPOINT
+	bool "Enable watchpoint"
+	default y
 endmenu
 
 if MODE_SYSTEM
@@ -213,5 +217,4 @@ endchoice
 config RT_CHECK
   bool "Enable runtime checking"
   default y
-
 endmenu
