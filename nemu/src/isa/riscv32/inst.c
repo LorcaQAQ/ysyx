@@ -23,8 +23,7 @@
 #define Mw vaddr_write
 
 enum {
-  TYPE_I, TYPE_U, TYPE_S,TYPE_J,
-  TYPE_N, // none
+  TYPE_I, TYPE_U, TYPE_S,TYPE_J,TYPE_N, // none
 };
 
 #define src1R() do { *src1 = R(rs1); } while (0)
