@@ -24,13 +24,13 @@ SIM_SRCS=$(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "
 SIM_SRCS += $(SRC_AUTO_BIND)
 
 # rules for NVBoard
-include $(NVBOARD_HOME)/scripts/nvboard.mk
+#include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
-$(BIN): $(VSOURCES) $(SIM_SRCS) $(NVBOARD_ARCHIVE)
+$(BIN): $(VSOURCES) $(SIM_SRCS) #$(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $^ \
