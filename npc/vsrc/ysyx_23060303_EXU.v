@@ -11,6 +11,6 @@ always @(*)
 if(addi==1'b1)
     result=val1+val2;
 else
-    result=WIDTH'd0;
+    result={WIDTH{1'b0}};
     
 endmodule

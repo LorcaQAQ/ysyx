@@ -8,9 +8,9 @@ module ysyx_23060303_IDU(
 
 //immI
 wire immI_en;
-wire [32:0] ImmI;
+wire [31:0] immI;
 assign immI_en=~inst[6]&~inst[5]&inst[4]&~inst[3]&~inst[2]&inst[1]&inst[0];//opcode=0010011
-assign immI={20{inst[31]},inst[31:20]};
+assign immI={{20{inst[31]}},inst[31:20]};
 
 //immR
 wire immR_en;
@@ -30,7 +30,7 @@ assign imm_branch={immR_en,immI_en,immS_en,immB_en,immU_en,immJ_en};
 ysyx_23060303_MuxKeyInternal 
 #(  .NR_KEY (1), 
     .KEY_LEN (6), 
-    .DATA_LEN = (32), 
+    .DATA_LEN  (32), 
     .HAS_DEFAULT (1)
 ) 
 Mux_imm_i0
@@ -47,7 +47,7 @@ Mux_imm_i0
 
 
 //addi
-assign addi=immI&~inst[14]&~inst[13]&~inst[12];
+assign addi=immI_en&~inst[14]&~inst[13]&~inst[12];
 
 //immediate enable
 assign imm_en=immR_en|immI_en|immS_en|immB_en|immU_en|immJ_en;

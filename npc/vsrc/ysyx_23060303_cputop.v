@@ -3,7 +3,7 @@ module ysyx_23060303_cputop(
     input   rst,
     input   [31:0]  inst,
     output  [31:0]  pc,
-    output  [3:0]   nemu_state_stop
+    output  nemu_state_stop
 );
 wire add_en;
 wire imm_en;
@@ -13,10 +13,11 @@ wire [31:0] wdata;
 wire [31:0] rdata1;
 wire [31:0] rdata2;
 wire [31:0] data2;
+wire [31:0] imm;
 
 assign nemu_state_stop=inst==32'b0000000_00001_00000_000_00000_11100_11;
 
-syx_23060303_IFU
+ysyx_23060303_IFU
 #(.PCWIDTH(32)
 )IFU_i0
 (
@@ -30,7 +31,7 @@ IDU_i0(
     .inst(inst),
     .addi(add_en),
     .imm_en(imm_en),
-    .imm(imm)
+    .imm(imm),
     .rd_en(rd_en)
 );
 
@@ -56,7 +57,7 @@ Reg_i0(
  (
   .out(data2),
   .key(imm_en),
-  .default_out({DATA_LEN{1'b0}}),
+  .default_out(32'b0),
   .lut(
     {
         1'b0,rdata2,
