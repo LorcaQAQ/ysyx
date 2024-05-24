@@ -49,7 +49,7 @@ int main(int argc,char** argv){
 
   	reset(10,top);
 
-	for(int i=0;i<3;i++) { 
+	for(int i=0;i<4;i++) { 
 
 		contextp->timeInc(1);//simulation time
 
