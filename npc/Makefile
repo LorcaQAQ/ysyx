@@ -1,4 +1,4 @@
-TOPNAME= light
+TOPNAME= ysyx_23060303_cputop
 NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 VERILATOR_CFLAGS += -MMD --build -cc \
