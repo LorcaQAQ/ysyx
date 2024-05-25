@@ -35,6 +35,7 @@ static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp,Ve
 	single_cycle(top,contextp,wave);
   }
   top->rst = 0;
+  wave->dump(contextp->time());
 }
 
 
