@@ -21,14 +21,14 @@ static uint32_t pmem_read(uint32_t *inst_list,uint32_t addr) {
   return ret;
 }
 
-static void single_cycle(Vysyx_23060303_cputop* top) {
-  top->clk = 0; top->eval();
-  top->clk = 1; top->eval();
+static void single_cycle(Vysyx_23060303_cputop* top,VerilatedContext *contextp) {
+  top->clk = 0; top->eval();contextp->timeInc(1);//simulation time
+  top->clk = 1; top->eval();contextp->timeInc(1);//simulation time
 }
 
-static void reset(int n,Vysyx_23060303_cputop* top) {
+static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp) {
   top->rst = 1;
-  while (n -- > 0) single_cycle(top);
+  while (n -- > 0) single_cycle(top,contextp);
   top->rst = 0;
 }
 
@@ -47,14 +47,14 @@ int main(int argc,char** argv){
 	top->trace(wave,5);
 	wave->open("build/top.vcd");
 
-  	reset(10,top);
+  	reset(10,top,contextp);
 
 	for(int i=0;i<4;i++) { 
 
-		contextp->timeInc(1);//simulation time
+		//contextp->timeInc(1);//simulation time
 
 		top->inst=pmem_read(inst_list,top->pc);
-		single_cycle(top);
+		single_cycle(top,contextp);
 		wave->dump(contextp->time());
 	}
 	wave->close();
