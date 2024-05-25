@@ -2,13 +2,15 @@
 #include <stdlib.h>
 #include <Vysyx_23060303_cputop.h>
 #include "verilated.h"
-
+//#include "svdpi.h"
+//#include "Vysyx_23060303_cputop__Dpi.h"
 #include <verilated_vcd_c.h>
 
 static const uint32_t inst[]={
-0b0000000001100000000000010010011,//addi $ra,$$0,0x03
-0b0000000001100001000000100010011,//addi $sp,$ra,0x03
-0b1101111101100010000000110010011,//addi $gp,$sp,0x6fb
+0b00000000001100000000000010010011,//addi $ra,$$0,0x03
+0b00000000001100001000000100010011,//addi $sp,$ra,0x03
+0b11101111101100010000000110010011,//addi $gp,$sp,0xefb
+0b00000000000100000000000001110011
 };
 
 static uint32_t *init_mem(int n){
@@ -31,15 +33,21 @@ static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp,Ve
   while (n -- > 0) 
   {
 	single_cycle(top,contextp,wave);
-	wave->dump(contextp->time());
   }
   top->rst = 0;
 }
 
 
+//void stop_simulation() {
+    // 打印停止仿真的消息
+ //   printf("Simulation stopped by DPI call.\n");
+    // 停止 Verilator 仿真
+  //  Verilated::gotFinish(true);
+//}
+
 int main(int argc,char** argv){
 
-	uint32_t* inst_list=init_mem(3);
+	uint32_t* inst_list=init_mem(4);
 
 	VerilatedContext *contextp=new VerilatedContext;
 	contextp->commandArgs(argc,argv);
@@ -54,7 +62,7 @@ int main(int argc,char** argv){
 
   	reset(5,top,contextp,wave);
 
-	for(int i=0;i<4;i++) { 
+	while (top->nemu_state_stop!=1) { 
 
 		//contextp->timeInc(1);//simulation time
 
