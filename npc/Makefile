@@ -36,6 +36,7 @@ ifeq ($(MAKECMDGOALS), run)
   DEPS += $(NVBOARD_ARCHIVE)
   SIM_SRCS += $(SRC_AUTO_BIND)
 endif
+
 #to perform simulation, we need to  add "--trace"
 ifeq ($(MAKECMDGOALS), sim)
   VERILATOR_CFLAGS +=--trace
@@ -67,6 +68,6 @@ clean:
 	rm -rf $(BUILD_DIR)
 include ../Makefile
 
-.PHONY:default all clean sim
+.PHONY:default all clean sim run
 
 
