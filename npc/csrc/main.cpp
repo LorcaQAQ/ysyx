@@ -22,7 +22,7 @@ static uint32_t pmem_read(uint32_t *inst_list,uint32_t addr) {
 }
 
 static void single_cycle(Vysyx_23060303_cputop* top,VerilatedContext *contextp) {
-  top->clk = !top->clk; contextp->timeInc(2);top->eval();//simulation time
+  top->clk = !top->clk; contextp->timeInc(1);top->eval();//simulation time
 }
 
 static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp) {
@@ -49,7 +49,7 @@ int main(int argc,char** argv){
 
   	reset(10,top,contextp);
 
-	for(int i=0;i<4;i++) { 
+	for(int i=0;i<8;i++) { 
 
 		//contextp->timeInc(1);//simulation time
 
