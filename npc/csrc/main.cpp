@@ -24,8 +24,8 @@ static uint32_t pmem_read(uint32_t *inst_list,uint32_t addr) {
 }
 
 static void single_cycle(Vysyx_23060303_cputop* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
-  top->clk = 1; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
   top->clk = 0; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
+  top->clk = 1; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
 }
 
 static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
@@ -60,9 +60,8 @@ int main(int argc,char** argv){
 	top->trace(wave,5);
 	wave->open("build/top.vcd");
 
-  	reset(5,top,contextp,wave);
-	contextp->timeInc(1);//delay 1ps
-	wave->dump(contextp->time());
+  	reset(4,top,contextp,wave);
+
 	while (!contextp->gotFinish()) { 
 
 		//contextp->timeInc(1);//simulation time
