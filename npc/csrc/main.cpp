@@ -59,10 +59,10 @@ int main(int argc,char** argv){
 	contextp->traceEverOn(true);
 	top->trace(wave,5);
 	wave->open("build/top.vcd");
-	top->clk=1;
 
   	reset(5,top,contextp,wave);
-
+	contextp->timeInc(1);//delay 1ps
+	wave->dump(contextp->time());
 	while (!contextp->gotFinish()) { 
 
 		//contextp->timeInc(1);//simulation time
