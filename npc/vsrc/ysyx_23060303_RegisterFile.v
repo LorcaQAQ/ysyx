@@ -10,14 +10,15 @@ module ysyx_23060303_RegisterFile #(ysyx_23060303_ADDR_WIDTH = 5, ysyx_23060303_
   output [ysyx_23060303_DATA_WIDTH-1:0]   rdata1,
   output [ysyx_23060303_DATA_WIDTH-1:0]   rdata2
 );
-wire [ysyx_23060303_DATA_WIDTH-1:0] rf[0];
-reg [ysyx_23060303_DATA_WIDTH-1:0] rf [2**ysyx_23060303_ADDR_WIDTH-1:1];
+reg [ysyx_23060303_DATA_WIDTH-1:0] rf [2**ysyx_23060303_ADDR_WIDTH-1:0];
 
 always @(posedge clk) begin
     if (wen) rf[waddr] <= wdata;
 end
 //register[0]=0
-assign rf[0]=32'b0;
+//assign rf[0]=32'b0;
+always @(*)
+  rf[0]=32'd0;
 
 assign rdata1=rf[raddr1];
 assign rdata2=rf[raddr2];
