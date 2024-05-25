@@ -45,7 +45,7 @@ int main(int argc,char** argv){
 	contextp->traceEverOn(true);
 	top->trace(wave,5);
 	wave->open("build/top.vcd");
-	top->clk=0;
+	top->clk=1;
 
   	reset(10,top,contextp);
 
