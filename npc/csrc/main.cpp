@@ -52,7 +52,7 @@ int main(int argc,char** argv){
 	wave->open("build/top.vcd");
 	top->clk=1;
 
-  	reset(10,top,contextp,wave);
+  	reset(5,top,contextp,wave);
 
 	for(int i=0;i<4;i++) { 
 
