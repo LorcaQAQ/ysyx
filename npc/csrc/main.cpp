@@ -25,6 +25,6 @@ int main(int argc, char **argv) {
 		single_cycle();
 		nvboard_update();
 	}
-	nvboard_quit();
+	//nvboard_quit();
   return 0;
 }
