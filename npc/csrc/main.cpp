@@ -21,13 +21,18 @@ static uint32_t pmem_read(uint32_t *inst_list,uint32_t addr) {
   return ret;
 }
 
-static void single_cycle(Vysyx_23060303_cputop* top,VerilatedContext *contextp) {
-  top->clk = !top->clk; contextp->timeInc(1);top->eval();//simulation time
+static void single_cycle(Vysyx_23060303_cputop* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
+  top->clk = 0; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
+  top->clk = 1; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
 }
 
-static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp) {
+static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
   top->rst = 1;
-  while (n -- > 0) single_cycle(top,contextp);
+  while (n -- > 0) 
+  {
+	single_cycle(top,contextp,wave);
+	wave->dump(contextp->time());
+  }
   top->rst = 0;
 }
 
@@ -47,15 +52,15 @@ int main(int argc,char** argv){
 	wave->open("build/top.vcd");
 	top->clk=1;
 
-  	reset(10,top,contextp);
+  	reset(10,top,contextp,wave);
 
-	for(int i=0;i<8;i++) { 
+	for(int i=0;i<4;i++) { 
 
 		//contextp->timeInc(1);//simulation time
 
 		top->inst=pmem_read(inst_list,top->pc);
-		single_cycle(top,contextp);
-		wave->dump(contextp->time());
+		single_cycle(top,contextp,wave);
+		//wave->dump(contextp->time());//output waveform
 	}
 	wave->close();
 	delete top;
