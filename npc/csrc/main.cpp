@@ -1,14 +1,13 @@
-#include <stdio.h>
 #include <Vlight.h>
 #include <nvboard.h>
-#include "verilated.h"
+
 
 static TOP_NAME light;
 void nvboard_bind_all_pins(TOP_NAME* light);
 
 void single_cycle() {
-	  light.clk = 0; light.eval();
-		  light.clk = 1; light.eval();
+	light.clk = 0; light.eval();
+	light.clk = 1; light.eval();
 }
 
 void reset(int n) {
@@ -18,12 +17,7 @@ void reset(int n) {
 }
 
 int main(int argc, char **argv) {
-
-	VerilatedContext *contextp=new VerilatedContext;
-	contextp->commandArgs(argc,argv);
-	Vlight *light=new Vlight{contextp};
-
-	nvboard_bind_all_pins(light);
+	nvboard_bind_all_pins(&light);
 	nvboard_init();
 
 	reset(10);
