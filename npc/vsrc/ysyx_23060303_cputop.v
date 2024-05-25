@@ -5,7 +5,7 @@ module ysyx_23060303_cputop(
     output  [31:0]  pc,
     output  nemu_state_stop
 );
- //import "DPI-C" function void stop_simulation();
+ import "DPI-C" function void stop_simulation();
 wire add_en;
 wire imm_en;
 wire immI;
@@ -74,7 +74,7 @@ EXU_i0(
     .val2(data2),
     .result(wdata)
 );
-//always @(*)
-//if(nemu_state_stop==1)
- // stop_simulation();
+always @(*)
+if(nemu_state_stop==1)
+  stop_simulation();
 endmodule

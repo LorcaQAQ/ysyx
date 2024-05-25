@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <Vysyx_23060303_cputop.h>
 #include "verilated.h"
-//#include "svdpi.h"
-//#include "Vysyx_23060303_cputop__Dpi.h"
+#include "svdpi.h"
+#include "Vysyx_23060303_cputop__Dpi.h"
 #include <verilated_vcd_c.h>
 
 static const uint32_t inst[]={
@@ -38,12 +38,12 @@ static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp,Ve
 }
 
 
-//void stop_simulation() {
+void stop_simulation() {
     // 打印停止仿真的消息
- //   printf("Simulation stopped by DPI call.\n");
+    printf("Simulation stopped by DPI call.\n");
     // 停止 Verilator 仿真
-  //  Verilated::gotFinish(true);
-//}
+    Verilated::gotFinish(true);
+}
 
 int main(int argc,char** argv){
 
@@ -62,7 +62,7 @@ int main(int argc,char** argv){
 
   	reset(5,top,contextp,wave);
 
-	while (top->nemu_state_stop!=1) { 
+	while (!contextp->gotFinish()) { 
 
 		//contextp->timeInc(1);//simulation time
 
