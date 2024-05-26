@@ -62,8 +62,8 @@ int main(int argc,char** argv){
 
   	reset(4,top,contextp,wave);
 
-	//while (!contextp->gotFinish()) { 
-	while (top->nemu_state_stop!=1) { 
+	while (!contextp->gotFinish()) { 
+	//while (top->nemu_state_stop!=1) { 
 		//contextp->timeInc(1);//simulation time
 
 		top->inst=pmem_read(inst_list,top->pc);
