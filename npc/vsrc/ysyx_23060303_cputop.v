@@ -77,4 +77,5 @@ EXU_i0(
 always @(*)
 if(nemu_state_stop==1)
   stop_simulation();
+  
 endmodule
