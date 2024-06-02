@@ -14,7 +14,23 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 }
 
 int sprintf(char *out, const char *fmt, ...) {
-  panic("Not implemented");
+  va_list ap;
+  va_start(ap,fmt);
+  int n=strlen(fmt);
+  for(int i=0;i<n;i++){
+    if(*fmt!='%'){
+      *out++=*fmt++;
+    }
+    else{
+      if(*++fmt=='d'){
+        *out++=va_arg(ap,int);
+      } 
+      else if(*++fmt=='s'){
+        *out++=va_arg(ap,int);
+      } 
+    }
+  }
+  return n;
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
