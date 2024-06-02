@@ -26,7 +26,7 @@ int sprintf(char *out, const char *fmt, ...) {
         *out++=va_arg(ap,int);
       } 
       else if(*++fmt=='s'){
-        *out++=va_arg(ap,int);
+        *out++=*va_arg(ap,const char*);
       } 
     }
   }
