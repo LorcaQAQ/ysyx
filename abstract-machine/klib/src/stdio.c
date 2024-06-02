@@ -30,6 +30,7 @@ int sprintf(char *out, const char *fmt, ...) {
       } 
     }
   }
+  va_end(ap);
   return n;
 }
 
