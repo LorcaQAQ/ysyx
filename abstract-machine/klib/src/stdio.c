@@ -47,9 +47,7 @@ int sprintf(char *out, const char *fmt, ...) {
               *out++=' ';
               break;*/
       default:
-            *out=*fmt;
-            fmt++;
-            out++;
+            *out++=*fmt++;
             fmtlen++;
             break;
     }
