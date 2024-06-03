@@ -74,7 +74,8 @@ EXU_i0(
     .val2(data2),
     .result(wdata)
 );
-always @(*)
+always @(nemu_state_stop)
 if(nemu_state_stop==1)
   stop_simulation();
+  
 endmodule
