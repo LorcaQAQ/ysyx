@@ -68,7 +68,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
 
 char* int2string(int num){
   int i=0;
-  char *str=NULL;
+  char *str= (char *)malloc(32 * sizeof(char));
   if(num<0){//check whether negative number
     str[i++]='-';
     num=-num;
