@@ -22,7 +22,7 @@ int sprintf(char *out, const char *fmt, ...) {
   int num;
   while(*fmt){
     switch(*fmt){
-      case '%':
+      case '%': /*conversion specification*/
               fmt++;
               break;
       case 'd':  /*integer*/
