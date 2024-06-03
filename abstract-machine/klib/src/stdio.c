@@ -30,7 +30,6 @@ int sprintf(char *out, const char *fmt, ...) {
               fmtlen--;
               num=va_arg(ap,int);
               out=int2string(num,out);
-              ++out;
               fmt++;
               break;
       case 's': /*string*/
