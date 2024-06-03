@@ -16,20 +16,22 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 }
 
 int sprintf(char *out, const char *fmt, ...) {
-    va_list ap;
+  va_list ap;
   va_start(ap,fmt);
   int fmtlen=0;
   int num;
   while(*fmt){
-    switch(*fmt++){
+    switch(*fmt){
       case '%':
               fmtlen--;
+              fmt++;
               break;
       case 'd':  /*integer*/
               fmtlen--;
               num=va_arg(ap,int);
               int2string(num,out);
               ++out;
+              fmt++;
               break;
       case 's': /*string*/
               fmtlen--;
@@ -38,13 +40,16 @@ int sprintf(char *out, const char *fmt, ...) {
                 *out++=*s++;
                 fmtlen++;
               }
+              fmt++;
               break;
       /*case ' ':
               fmtlen++;
               *out++=' ';
               break;*/
       default:
-            *out++=*fmt++;
+            *out=*fmt;
+            fmt++;
+            out++;
             fmtlen++;
             break;
     }
