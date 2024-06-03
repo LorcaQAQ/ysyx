@@ -18,41 +18,32 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 int sprintf(char *out, const char *fmt, ...) {
   va_list ap;
   va_start(ap,fmt);
-  int fmtlen=0;
+  char *start=out;
   int num;
   while(*fmt){
     switch(*fmt){
       case '%':
-              fmtlen--;
               fmt++;
               break;
       case 'd':  /*integer*/
-              fmtlen--;
               num=va_arg(ap,int);
               out=int2string(num,out);
               fmt++;
               break;
       case 's': /*string*/
-              fmtlen--;
               char *s=va_arg(ap,char *);
               while(*s){
                 *out++=*s++;
-                fmtlen++;
               }
               fmt++;
               break;
-      /*case ' ':
-              fmtlen++;
-              *out++=' ';
-              break;*/
       default:
             *out++=*fmt++;
-            fmtlen++;
             break;
     }
   }
   *out='\0';
-  return fmtlen;
+  return out-start;
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
