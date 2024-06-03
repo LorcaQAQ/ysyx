@@ -29,7 +29,7 @@ int sprintf(char *out, const char *fmt, ...) {
       case 'd':  /*integer*/
               fmtlen--;
               num=va_arg(ap,int);
-              int2string(num,out);
+              out=int2string(num,out);
               ++out;
               fmt++;
               break;
@@ -87,6 +87,7 @@ char* int2string(int num,char *str){
     s[i-1-j]=s[j]-s[i-1-j];
     s[j]=s[j]-s[i-1-j];
   }
+  s=s+i;
   return s;
 }
 #endif
