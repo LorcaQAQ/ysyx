@@ -39,10 +39,10 @@ int sprintf(char *out, const char *fmt, ...) {
                 fmtlen++;
               }
               break;
-      /*case ' ':
+      case ' ':
               fmtlen++;
               *out++=' ';
-              break;*/
+              break;
       default:
             *out++=*fmt++;
             fmtlen++;
