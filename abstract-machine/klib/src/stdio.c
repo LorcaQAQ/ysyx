@@ -37,7 +37,7 @@ int sprintf(char *out, const char *fmt, ...) {
               }
               fmt++;
               break;
-      default:
+      default:/*keep unchanged*/
             *out++=*fmt++;
             break;
     }
@@ -72,7 +72,7 @@ char* int2string(int num,char *str){
     j=1;
     i++;
   }
-  for(;j<i/2;j++){
+  for(;j<i/2;j++){/*inverse the order of string which is converted from an integer*/
     s[j]=s[j]+s[i-1-j];
     s[i-1-j]=s[j]-s[i-1-j];
     s[j]=s[j]-s[i-1-j];
