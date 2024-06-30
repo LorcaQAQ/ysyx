@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 		int ret;
 		ret=fscanf(fp,"%u",&true_result);
 		if(ret==EOF){
-			printf("All the results have been read.\n");
+			printf("All the expressions have been fetched.\n");
 		}
 		char *fp2=fgets(expr_str,65536,fp);
 		if(fp2!=NULL){
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 				assert(0);
 			}
 		}else{
-			printf("All the expression have been read.\n");
+			printf("All the expression have been successfully evaluated.\n");
 		}
 	}
 	fclose(fp);*/

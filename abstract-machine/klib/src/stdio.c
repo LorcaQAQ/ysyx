@@ -24,24 +24,28 @@ int sprintf(char *out, const char *fmt, ...) {
     switch(*fmt){
       case '%': /*conversion specification*/
               fmt++;
-              break;
-      case 'd':  /*integer*/
-              num=va_arg(ap,int);
-              out=int2string(num,out);
-              fmt++;
-              break;
-      case 's': /*string*/
-              char *s=va_arg(ap,char *);
-              while(*s){
-                *out++=*s++;
+              switch(*fmt){
+                case 'd':  /*integer*/
+                num=va_arg(ap,int);
+                out=int2string(num,out);
+                fmt++;
+                break;
+              case 's': /*string*/
+                char *s=va_arg(ap,char *);
+                while(*s){
+                  *out++=*s++;
+                }
+                fmt++;
+                break;
+                default:break;
               }
-              fmt++;
               break;
       default:/*keep unchanged*/
             *out++=*fmt++;
             break;
     }
   }
+  va_end(ap);
   *out='\0';
   return out-start;
 }
