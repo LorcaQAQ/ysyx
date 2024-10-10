@@ -17,6 +17,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
+#include "../utils/ringbuf.h"
 #include "../monitor/sdb/sdb.h"
 
 /* The assembly code of instructions executed is only output to the screen
@@ -32,6 +33,7 @@ static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
 void device_update();
+int write_RingBuffer(RingBuffer *buffer,char *data);
 
 static void trace_and_difftest(Decode* _this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -94,6 +96,7 @@ static void execute(uint64_t n) {
     for (; n > 0; n--) {
         exec_once(&s, cpu.pc);
         g_nr_guest_inst++;
+        write_RingBuffer(buffer,s.logbuf);
         trace_and_difftest(&s, cpu.pc);
         if (nemu_state.state != NEMU_RUNNING) break;
         IFDEF(CONFIG_DEVICE, device_update());
@@ -142,5 +145,18 @@ void cpu_exec(uint64_t n) {
             nemu_state.halt_pc);
         // fall through
     case NEMU_QUIT: statistic();
+    //iringbuf
+    if(nemu_state.halt_ret != 0){
+        for(int i=0;i<buffer->bufferlength;i++){
+        if (i== buffer->write_index-1) {
+            printf(" --> %s\n",buffer->log[i]);
+        }
+        else {
+            printf("     %s\n",buffer->log[i]);
+        } 
+        }
+    }
+    free(buffer);
+    
     }
 }
