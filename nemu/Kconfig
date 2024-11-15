@@ -156,6 +156,12 @@ config ITRACE_COND
   bool "Enable memory trace"
   default y
 
+  config FTRACE
+  depends on ITRACE
+  bool "Enable function trace"
+  default y
+
+
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
   bool "Enable differential testing"

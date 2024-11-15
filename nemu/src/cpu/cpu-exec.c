@@ -19,7 +19,7 @@
 #include <locale.h>
 #include "../utils/ringbuf.h"
 #include "../monitor/sdb/sdb.h"
-
+#include "../utils/elf_read.h"
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -32,8 +32,11 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+
 void device_update();
 int write_RingBuffer(RingBuffer *buffer,char *data);
+void print_space(int n);
+int display_ftrace(Decode s, int n);
 
 static void trace_and_difftest(Decode* _this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -93,11 +96,17 @@ static void exec_once(Decode* s, vaddr_t pc) {
 
 static void execute(uint64_t n) {
     Decode s;
+    #ifdef CONFIG_FTRACE
+        int fun_hierachy=0;//to construct function hierachy
+    #endif
     for (; n > 0; n--) {
         exec_once(&s, cpu.pc);
         g_nr_guest_inst++;
         write_RingBuffer(buffer,s.logbuf);
         trace_and_difftest(&s, cpu.pc);
+        #ifdef CONFIG_FTRACE
+            fun_hierachy=display_ftrace(s, fun_hierachy);
+        #endif
         if (nemu_state.state != NEMU_RUNNING) break;
         IFDEF(CONFIG_DEVICE, device_update());
     }
@@ -159,4 +168,41 @@ void cpu_exec(uint64_t n) {
     free(buffer);
     
     }
+}
+void print_space(int n){
+    for(int j=0;j<n;j++)
+        printf(" ");
+}
+
+int display_ftrace(Decode s,int n){
+    if((BITS(s.isa.inst.val,6,0)==0b1101111)||((BITS(s.isa.inst.val,6,0)==0b1100111)&&(BITS(s.isa.inst.val,14,12)==0b000)))
+        {
+           if(s.isa.inst.val==0x00008067)
+           {//ret
+                n-=1;
+                for(int i=0;i<func_cnt;i++)
+                {
+                    if(s.dnpc>=func_pool[i].addr&&s.dnpc<=(func_pool[i].addr+func_pool[i].offset))
+                    {
+                        printf("%x:",s.pc);
+                        print_space(n);
+                        printf("ret[%s@%x]\n",func_pool[i].name,s.dnpc);
+                    }       
+                }
+           }else
+           {//jal jalr
+            for(int i=0;i<func_cnt;i++){
+                if(s.dnpc==func_pool[i].addr)
+                {
+                    printf("%x:",s.pc);
+                    print_space(n);
+                    printf("call [%s@0x%x]\n",func_pool[i].name,func_pool[i].addr);
+                }
+                
+            }
+           n+=1;
+           }
+        }
+
+    return n;
 }
