@@ -18,8 +18,8 @@ char *strcpy(char *dst, const char *src) {
   assert((dst!=NULL)&&(src!=NULL));
   size_t i;
   for(i=0;src[i]!='\0';i++){
-    dst[i]=src[i];
-  }
+      dst[i]=src[i];
+    }
   dst[i]='\0';
   return dst;
 }
@@ -54,18 +54,18 @@ int strcmp(const char *s1, const char *s2) {
       i++;
    }
     return s1[i]-s2[i];
-
-  
 }
 
 int strncmp(const char *s1, const char *s2, size_t n) {
   assert(s1);
   assert(s2);
   int i=0;
-  while((s1[i]==s2[i])&&(s1[i]!='\0'||s2[i]!='\0')&&i<n){
+  int res=s1[0]-s2[0];
+  while(res==0&&(s1[i]!='\0'||s2[i]!='\0')&&i<n){
+    res=s1[i]-s2[i];
     i++;
   }
-  return s1[i]-s2[i];
+  return res;
 }
 
 void *memset(void *s, int c, size_t n) {
@@ -109,9 +109,8 @@ int memcmp(const void *s1, const void *s2, size_t n) {
   const char *sc1=s1;
   const char *sc2=s2;
   while(n--){
-    if((sc1++)-(sc2++)!=0){
-      break;
-    }
+    res=(*sc1++)-(*sc2++);
+    if(res!=0) break;
   }
   return res;
 }
