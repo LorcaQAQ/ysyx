@@ -16,9 +16,19 @@
 #include <isa.h>
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
-
+#define NR_GPR MUXDEF(CONFIG_RVE, 16, 32)
+//#define FMT_WORD MUXDEF(CONFIG_ISA64, "0x%016" PRIx64, "0x%08" PRIx32)
+#include <cpu/cpu.h>
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  return false;
+  for (int i = 0; i < NR_GPR; i++) {
+    if(ref_r->gpr[i]!=cpu.gpr[i]) {
+       Log("Difftest: %s at pc = " FMT_WORD,
+            ANSI_FMT("ERROR", ANSI_FG_RED),pc);
+      //printf("The error happens at:"FMT_WORD"\n",pc);
+      return false;
+    }
+  }
+  return true;
 }
 
 void isa_difftest_attach() {

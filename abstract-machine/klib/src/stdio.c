@@ -61,9 +61,16 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
 char* int2string(int num,char *str){
   char *s=str;
   int i=0;
+  int dont_need_change_order=0;
   if(num<0){//check whether negative number
-    s[i++]='-';
-    num=-num;
+    if(num==-2147483648){//special case for INT_MIN
+       strcpy(s, "-2147483648");
+       return s+11;
+    }else{
+      s[i++]='-';
+      if(num<=-1&&num>=-9) dont_need_change_order=1;//special case for small negative numbers
+      num=-num; 
+    }
   }
   do{//
     s[i++]=num%10+'0';
@@ -74,7 +81,7 @@ char* int2string(int num,char *str){
   int j=0;
   if(s[0]=='-'){
     j=1;
-    i++;
+    if(dont_need_change_order==0) i++;    
   }
   for(;j<i/2;j++){/*inverse the order of string which is converted from an integer*/
     s[j]=s[j]+s[i-1-j];
