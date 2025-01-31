@@ -1,6 +1,7 @@
-TOPNAME= ysyx_23060303_cputop
+TOPNAME= Core
 NXDC_FILES = constr/top.nxdc
-INC_PATH ?=
+INC_PATH =/usr/include/readline
+LDFLAGS= -lreadline
 VERILATOR_CFLAGS += -MMD --build -cc \
 										-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR=verilator
@@ -18,7 +19,8 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # search v files
-VSOURCES=$(shell find $(abspath ./vsrc) -name "*.v")
+VSOURCES=$(shell find $(abspath ./vsrc) -name "*.sv")
+VSOURCES +=$(shell find $(abspath ./vsrc) -name "*.v")
 # testbench cpp files
 SIM_SRCS=$(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 

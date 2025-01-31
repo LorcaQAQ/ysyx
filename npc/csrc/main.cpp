@@ -1,40 +1,123 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <Vysyx_23060303_cputop.h>
+#include <VCore.h>
 #include "verilated.h"
 #include "svdpi.h"
-#include "Vysyx_23060303_cputop__Dpi.h"
+#include "VCore__Dpi.h"
 #include <verilated_vcd_c.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
-static const uint32_t inst[]={
+#define RESET_VECTOR 0x80000000
+#define PG_ALIGN __attribute__((aligned(4096)))
+#define CONFIG_MSIZE 0x8000000
+#define CONFIG_MBASE 0x80000000
+
+static const uint32_t img[]={
 0b00000000001100000000000010010011,//addi $ra,$$0,0x03
 0b00000000101100001000000100010011,//addi $sp,$ra,0x03
 0b11101111101100010000000110010011,//addi $gp,$sp,0xefb
 0b00000000000100000000000001110011
 };
+static char *img_file = NULL;
+static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
-static uint32_t *init_mem(int n){
-  uint32_t *inst_list=(uint32_t *)malloc(n * sizeof(uint32_t));
-  memcpy(inst_list,inst,sizeof(inst));
-  return inst_list;
+
+
+
+static long load_img();
+static void init_pmem();
+
+uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; }
+static uint32_t pmem_read(uint32_t addr);
+
+static void single_cycle(VCore* top,VerilatedContext *contextp,VerilatedVcdC *wave);
+static void reset(int n,VCore* top,VerilatedContext *contextp,VerilatedVcdC *wave);
+void stop_simulation();
+
+static char* rl_gets();
+
+
+int main(int argc,char** argv){
+
+	init_pmem();
+
+	VerilatedContext *contextp=new VerilatedContext;
+	contextp->commandArgs(argc,argv);
+	VCore* top=new VCore{contextp};
+	VerilatedVcdC *wave =new VerilatedVcdC;//wave
+
+	//wave configuration
+	contextp->traceEverOn(true);
+	top->trace(wave,5);
+	wave->open("build/top.vcd");
+
+  	reset(4,top,contextp,wave);
+	//for (; (img_file = rl_gets()) != NULL; ){
+		//long img_size=load_img();
+    //assert(img_size!=0);
+		while (!contextp->gotFinish()) { 
+			top->io_instr=pmem_read((uint32_t)top->io_pc);
+			single_cycle(top,contextp,wave);
+		}
+			
+	//}
+	wave->close();	
+	delete top;
+	delete contextp;
+	return 0;
 }
-static uint32_t pmem_read(uint32_t *inst_list,uint32_t addr) {
-  uint32_t ret = inst_list[(addr-0x80000000)/4];
+
+
+
+static long load_img() {
+  if (img_file == NULL) {
+    printf("No image is given. Use the default build-in image.");
+    return 4096; // built-in image size
+  }
+
+  FILE *fp = fopen(img_file, "rb");
+  if(fp==NULL){
+    printf("Can not open '%s'", img_file);
+    assert(0);
+  }
+
+  fseek(fp, 0, SEEK_END);
+  long size = ftell(fp);
+
+  printf("The image is %s, size = %ld", img_file, size);
+
+  fseek(fp, 0, SEEK_SET);
+  int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
+  assert(ret == 1);
+
+  fclose(fp);
+  return size;
+}
+
+
+ void init_pmem(){
+  memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
+}
+
+static uint32_t pmem_read(uint32_t addr) {
+  uint32_t ret = *(uint32_t *)guest_to_host(addr);
   return ret;
 }
 
-static void single_cycle(Vysyx_23060303_cputop* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
-  top->clk = 0; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
-  top->clk = 1; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
+
+static void single_cycle(VCore* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
+  top->clock = 0; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
+  top->clock = 1; contextp->timeInc(1);top->eval();wave->dump(contextp->time());//simulation time
 }
 
-static void reset(int n,Vysyx_23060303_cputop* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
-  top->rst = 1;
+static void reset(int n,VCore* top,VerilatedContext *contextp,VerilatedVcdC *wave) {
+  top->reset = 1;
   while (n -- > 0) 
   {
 	single_cycle(top,contextp,wave);
   }
-  top->rst = 0;
+  top->reset = 0;
   wave->dump(contextp->time());
 }
 
@@ -46,32 +129,19 @@ void stop_simulation() {
     Verilated::gotFinish(true);
 }
 
-int main(int argc,char** argv){
+static char* rl_gets() {
+  static char *line_read = NULL;
 
-	uint32_t* inst_list=init_mem(4);
+  if (line_read) {
+    free(line_read);
+    line_read = NULL;
+  }
 
-	VerilatedContext *contextp=new VerilatedContext;
-	contextp->commandArgs(argc,argv);
-	Vysyx_23060303_cputop* top=new Vysyx_23060303_cputop{contextp};
-	VerilatedVcdC *wave =new VerilatedVcdC;//wave
+  line_read = readline("(Npc simulation file:) ");
 
-	//wave configuration
-	contextp->traceEverOn(true);
-	top->trace(wave,5);
-	wave->open("build/top.vcd");
+  if (line_read && *line_read) {
+    add_history(line_read);
+  }
 
-  	reset(4,top,contextp,wave);
-
-	while (!contextp->gotFinish()) { 
-	//while (top->nemu_state_stop!=1) { 
-		//contextp->timeInc(1);//simulation time
-
-		top->inst=pmem_read(inst_list,top->pc);
-		single_cycle(top,contextp,wave);
-		//wave->dump(contextp->time());//output waveform
-	}
-	wave->close();
-	delete top;
-	delete contextp;
-	return 0;
+  return line_read;
 }
