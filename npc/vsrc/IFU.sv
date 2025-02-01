@@ -2,16 +2,23 @@
 module IFU(
   input         clock,
                 reset,
-  output [31:0] io_pc
+  input  [31:0] io_alu_pc,
+  input         io_jump_en,
+  output [31:0] io_pc,
+                io_snpc
 );
 
-  reg [31:0] pc;
+  reg  [31:0] pc;
+  wire [31:0] _snpc_T = pc + 32'h4;
   always @(posedge clock) begin
     if (reset)
       pc <= 32'h80000000;
+    else if (io_jump_en)
+      pc <= io_alu_pc;
     else
-      pc <= pc + 32'h4;
+      pc <= _snpc_T;
   end // always @(posedge)
   assign io_pc = pc;
+  assign io_snpc = _snpc_T;
 endmodule
 

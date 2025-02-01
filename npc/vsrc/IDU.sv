@@ -2,14 +2,50 @@
 module IDU(
   input  [31:0] io_instr,
   output [4:0]  io_rs1,
+                io_rs2,
                 io_rd,
   output [31:0] io_imm,
-  output        io_rf_wen
+  output        io_rf_wen,
+                io_rf_wdata_sel,
+  output [2:0]  io_alu_op1_sel,
+                io_alu_op2_sel,
+  output [3:0]  io_alu_op,
+  output        io_jump_en
 );
 
-  assign io_rs1 = io_instr[19:15];
-  assign io_rd = io_instr[11:7];
-  assign io_imm = {{20{io_instr[31]}}, io_instr[31:20]};
-  assign io_rf_wen = {io_instr[14:12], io_instr[6:0]} == 10'h13;
+  wire [9:0]       _GEN = {io_instr[14:12], io_instr[6:0]};
+  wire             _csignals_T_1 = _GEN == 10'h13;
+  wire             _csignals_T_3 = io_instr[6:0] == 7'h17;
+  wire             _csignals_T_5 = io_instr[6:0] == 7'h37;
+  wire             _csignals_T_7 = io_instr[6:0] == 7'h6F;
+  wire             _csignals_T_30 = _GEN == 10'h67;
+  wire             _GEN_0 = _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _csignals_T_7;
+  wire             csignals_0 = _GEN_0 | _csignals_T_30;
+  wire [2:0]       _csignals_T_18 = {2'h0, _csignals_T_30};
+  wire [2:0]       csignals_1 =
+    _csignals_T_1
+      ? 3'h1
+      : _csignals_T_3
+          ? 3'h2
+          : _csignals_T_5 ? 3'h0 : _csignals_T_7 ? 3'h2 : _csignals_T_18;
+  wire             _GEN_1 = _csignals_T_3 | _csignals_T_5;
+  wire [2:0]       csignals_2 =
+    _csignals_T_1 ? 3'h1 : _GEN_1 ? 3'h2 : _csignals_T_7 ? 3'h3 : _csignals_T_18;
+  wire [3:0][31:0] _GEN_2 =
+    {{{{12{io_instr[31]}}, io_instr[19:12], io_instr[20], io_instr[30:21], 1'h0}},
+     {{io_instr[31:12], 12'h0}},
+     {{{20{io_instr[31]}}, io_instr[31:20]}},
+     {32'h0}};
+  assign io_rs1 = csignals_1 == 3'h1 ? io_instr[19:15] : 5'h0;
+  assign io_rs2 = csignals_2[1:0] == 2'h0 ? io_instr[24:20] : 5'h0;
+  assign io_rd = csignals_0 ? io_instr[11:7] : 5'h0;
+  assign io_imm = _GEN_2[csignals_2[1:0]];
+  assign io_rf_wen = csignals_0;
+  assign io_rf_wdata_sel =
+    ~_csignals_T_1 & (_csignals_T_3 | ~_csignals_T_5 & (_csignals_T_7 | _csignals_T_30));
+  assign io_alu_op1_sel = csignals_1;
+  assign io_alu_op2_sel = csignals_2;
+  assign io_alu_op = _GEN_0 ? 4'h0 : {3'h0, _csignals_T_30};
+  assign io_jump_en = ~(_csignals_T_1 | _GEN_1) & (_csignals_T_7 | _csignals_T_30);
 endmodule
 

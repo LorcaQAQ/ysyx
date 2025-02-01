@@ -5,7 +5,9 @@ module RegFile(
   input  [3:0]  io_waddr,
   input         io_wen,
   input  [3:0]  io_raddr1,
-  output [31:0] io_rdata1
+                io_raddr2,
+  output [31:0] io_rdata1,
+                io_rdata2
 );
 
   reg  [31:0]       regfile_1;
@@ -133,5 +135,6 @@ module RegFile(
     end
   end // always @(posedge)
   assign io_rdata1 = _GEN[io_raddr1];
+  assign io_rdata2 = _GEN[io_raddr2];
 endmodule
 

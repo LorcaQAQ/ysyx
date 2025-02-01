@@ -7,6 +7,8 @@
 #include <verilated_vcd_c.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <getopt.h>
+
 
 #define RESET_VECTOR 0x80000000
 #define PG_ALIGN __attribute__((aligned(4096)))
@@ -35,13 +37,17 @@ static void single_cycle(VCore* top,VerilatedContext *contextp,VerilatedVcdC *wa
 static void reset(int n,VCore* top,VerilatedContext *contextp,VerilatedVcdC *wave);
 void stop_simulation();
 
-static char* rl_gets();
+//static char* rl_gets();
+
+static int parse_args(int argc, char *argv[]);
 
 
 int main(int argc,char** argv){
 
-	init_pmem();
+	
+  parse_args(argc, argv);
 
+  init_pmem();
 	VerilatedContext *contextp=new VerilatedContext;
 	contextp->commandArgs(argc,argv);
 	VCore* top=new VCore{contextp};
@@ -52,20 +58,51 @@ int main(int argc,char** argv){
 	top->trace(wave,5);
 	wave->open("build/top.vcd");
 
-  	reset(4,top,contextp,wave);
-	//for (; (img_file = rl_gets()) != NULL; ){
-		//long img_size=load_img();
-    //assert(img_size!=0);
-		while (!contextp->gotFinish()) { 
-			top->io_instr=pmem_read((uint32_t)top->io_pc);
-			single_cycle(top,contextp,wave);
-		}
-			
-	//}
+  reset(4,top,contextp,wave);
+
+	long img_size=load_img();
+  assert(img_size!=0);
+	//while (!contextp->gotFinish()) { //simulation loop read instr from pmem
+  for(int i=0;i<img_size/4;i++){
+	  top->io_instr=pmem_read((uint32_t)top->io_pc);
+		single_cycle(top,contextp,wave);
+	}
 	wave->close();	
 	delete top;
 	delete contextp;
 	return 0;
+}
+
+static int parse_args(int argc, char *argv[]) {
+  const struct option table[] = {
+    {"batch"    , no_argument      , NULL, 'b'},
+    {"log"      , required_argument, NULL, 'l'},
+    {"diff"     , required_argument, NULL, 'd'},
+    {"port"     , required_argument, NULL, 'p'},
+    {"help"     , no_argument      , NULL, 'h'},
+    {"ftrace"   , required_argument, NULL, 'f'},
+    {0          , 0                , NULL,  0 },
+  };
+  int o;
+  while ( (o = getopt_long(argc, argv, "-bhl:d:p:f:", table, NULL)) != -1) {
+    switch (o) {
+      case 'b': break;
+      case 'p': break;
+      case 'l': break;
+      case 'd': break;
+      case 'f': break;
+      case 1: img_file = optarg; return 0;
+      default:
+        printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
+        printf("\t-b,--batch              run with batch mode\n");
+        printf("\t-l,--log=FILE           output log to FILE\n");
+        printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
+        printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+        printf("\n");
+        exit(0);
+    }
+  }
+  return 0;
 }
 
 
@@ -73,7 +110,7 @@ int main(int argc,char** argv){
 static long load_img() {
   if (img_file == NULL) {
     printf("No image is given. Use the default build-in image.");
-    return 4096; // built-in image size
+    return 15; // built-in image size
   }
 
   FILE *fp = fopen(img_file, "rb");
@@ -128,7 +165,7 @@ void stop_simulation() {
     // 停止 Verilator 仿真
     Verilated::gotFinish(true);
 }
-
+/*
 static char* rl_gets() {
   static char *line_read = NULL;
 
@@ -137,7 +174,7 @@ static char* rl_gets() {
     line_read = NULL;
   }
 
-  line_read = readline("(Npc simulation file:) ");
+  line_read = readline("Npc simulation file: ");
 
   if (line_read && *line_read) {
     add_history(line_read);
@@ -145,3 +182,4 @@ static char* rl_gets() {
 
   return line_read;
 }
+*/

@@ -8,39 +8,64 @@ module Core(
 );
 
   wire [31:0] _regfile_io_rdata1;
+  wire [31:0] _regfile_io_rdata2;
   wire [31:0] _exu_io_result;
   wire [4:0]  _idu_io_rs1;
+  wire [4:0]  _idu_io_rs2;
   wire [4:0]  _idu_io_rd;
   wire [31:0] _idu_io_imm;
   wire        _idu_io_rf_wen;
+  wire        _idu_io_rf_wdata_sel;
+  wire [2:0]  _idu_io_alu_op1_sel;
+  wire [2:0]  _idu_io_alu_op2_sel;
+  wire [3:0]  _idu_io_alu_op;
+  wire        _idu_io_jump_en;
+  wire [31:0] _ifu_io_pc;
+  wire [31:0] _ifu_io_snpc;
   IFU ifu (
-    .clock (clock),
-    .reset (reset),
-    .io_pc (io_pc)
+    .clock      (clock),
+    .reset      (reset),
+    .io_alu_pc  (_exu_io_result),
+    .io_jump_en (_idu_io_jump_en),
+    .io_pc      (_ifu_io_pc),
+    .io_snpc    (_ifu_io_snpc)
   );
   IDU idu (
-    .io_instr  (io_instr),
-    .io_rs1    (_idu_io_rs1),
-    .io_rd     (_idu_io_rd),
-    .io_imm    (_idu_io_imm),
-    .io_rf_wen (_idu_io_rf_wen)
+    .io_instr        (io_instr),
+    .io_rs1          (_idu_io_rs1),
+    .io_rs2          (_idu_io_rs2),
+    .io_rd           (_idu_io_rd),
+    .io_imm          (_idu_io_imm),
+    .io_rf_wen       (_idu_io_rf_wen),
+    .io_rf_wdata_sel (_idu_io_rf_wdata_sel),
+    .io_alu_op1_sel  (_idu_io_alu_op1_sel),
+    .io_alu_op2_sel  (_idu_io_alu_op2_sel),
+    .io_alu_op       (_idu_io_alu_op),
+    .io_jump_en      (_idu_io_jump_en)
   );
   EXU exu (
-    .io_val1   (_regfile_io_rdata1),
-    .io_val2   (_idu_io_imm),
+    .io_alu_op (_idu_io_alu_op),
+    .io_val1
+      (_idu_io_alu_op1_sel == 3'h0 | _idu_io_alu_op1_sel == 3'h1
+         ? _regfile_io_rdata1
+         : _idu_io_alu_op1_sel == 3'h2 ? _ifu_io_pc : 32'h0),
+    .io_val2   (_idu_io_alu_op2_sel == 3'h0 ? _regfile_io_rdata2 : _idu_io_imm),
     .io_result (_exu_io_result)
   );
   RegFile regfile (
     .clock     (clock),
-    .io_wdata  (_exu_io_result),
+    .io_wdata  (_idu_io_rf_wdata_sel ? _ifu_io_snpc : _exu_io_result),
     .io_waddr  (_idu_io_rd[3:0]),
     .io_wen    (_idu_io_rf_wen),
     .io_raddr1 (_idu_io_rs1[3:0]),
-    .io_rdata1 (_regfile_io_rdata1)
+    .io_raddr2 (_idu_io_rs2[3:0]),
+    .io_rdata1 (_regfile_io_rdata1),
+    .io_rdata2 (_regfile_io_rdata2)
   );
   ebreak ebreak (
     .instr (io_instr)
   );
+  assign io_pc = _ifu_io_pc;
   assign io_result = _exu_io_result;
 endmodule
 

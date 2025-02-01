@@ -19,8 +19,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # search v files
-VSOURCES=$(shell find $(abspath ./vsrc) -name "*.sv")
-VSOURCES +=$(shell find $(abspath ./vsrc) -name "*.v")
+VSOURCES=$(shell find $(abspath ./vsrc) -name "*.sv" -or -name "*.v")
 # testbench cpp files
 SIM_SRCS=$(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -40,7 +39,11 @@ ifeq ($(MAKECMDGOALS), run)
 endif
 
 #to perform simulation, we need to  add "--trace"
-ifeq ($(MAKECMDGOALS), sim)
+ifeq ($(MAKECMDGOALS), sim )
+  VERILATOR_CFLAGS +=--trace
+endif
+
+ifeq ($(MAKECMDGOALS), run_npc) 
   VERILATOR_CFLAGS +=--trace
 endif
 
@@ -51,12 +54,14 @@ $(BIN): $(DEPS)
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
+NPC_EXEC := $(BIN) $(ARGS) $(IMG)
+
 all: default
 	@echo "Write this Makefile by your self."
 
 run: $(BIN)
 	@$^
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	$(call git_commit, "run RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Run on nvboard."
 	@echo "Write this Makefile by your self."
 
@@ -64,6 +69,12 @@ sim: $(BIN)
 	@$^
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Simulation in verilator."
+	@echo "Write this Makefile by your self."
+
+run_npc: $(BIN)
+	$(NPC_EXEC)
+	$(call git_commit, "test RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo "NPC Simulation test."
 	@echo "Write this Makefile by your self."
 
 clean:
