@@ -1,0 +1,12 @@
+*.*
+*
+!*/
+!Makefile
+!*.sbt
+!*.sc
+!.gitignore
+!README.md
+out/
+project/project
+project/target
+target
