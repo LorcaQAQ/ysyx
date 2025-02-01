@@ -10,4 +10,5 @@
 !*.cpp
 !.gitignore
 !README.md
+!chisel-template/
 build/
