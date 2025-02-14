@@ -6,7 +6,10 @@
 !*.sc
 !.gitignore
 !README.md
+!.mill-version
+!src/
+!src/** 
 out/
 project/project
 project/target
-target
+target/

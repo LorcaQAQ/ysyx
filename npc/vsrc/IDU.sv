@@ -31,7 +31,8 @@ module IDU(
   wire             _GEN_1 = _csignals_T_3 | _csignals_T_5;
   wire [2:0]       csignals_2 =
     _csignals_T_1 ? 3'h1 : _GEN_1 ? 3'h2 : _csignals_T_7 ? 3'h3 : _csignals_T_18;
-  wire [3:0][31:0] _GEN_2 =
+  wire             _GEN_2 = _csignals_T_1 | _GEN_1;
+  wire [3:0][31:0] _GEN_3 =
     {{{{12{io_instr[31]}}, io_instr[19:12], io_instr[20], io_instr[30:21], 1'h0}},
      {{io_instr[31:12], 12'h0}},
      {{{20{io_instr[31]}}, io_instr[31:20]}},
@@ -39,13 +40,12 @@ module IDU(
   assign io_rs1 = csignals_1 == 3'h1 ? io_instr[19:15] : 5'h0;
   assign io_rs2 = csignals_2[1:0] == 2'h0 ? io_instr[24:20] : 5'h0;
   assign io_rd = csignals_0 ? io_instr[11:7] : 5'h0;
-  assign io_imm = _GEN_2[csignals_2[1:0]];
+  assign io_imm = _GEN_3[csignals_2[1:0]];
   assign io_rf_wen = csignals_0;
-  assign io_rf_wdata_sel =
-    ~_csignals_T_1 & (_csignals_T_3 | ~_csignals_T_5 & (_csignals_T_7 | _csignals_T_30));
+  assign io_rf_wdata_sel = ~_GEN_2 & (_csignals_T_7 | _csignals_T_30);
   assign io_alu_op1_sel = csignals_1;
   assign io_alu_op2_sel = csignals_2;
   assign io_alu_op = _GEN_0 ? 4'h0 : {3'h0, _csignals_T_30};
-  assign io_jump_en = ~(_csignals_T_1 | _GEN_1) & (_csignals_T_7 | _csignals_T_30);
+  assign io_jump_en = ~_GEN_2 & (_csignals_T_7 | _csignals_T_30);
 endmodule
 

@@ -62,7 +62,7 @@ module Core(
     .io_rdata1 (_regfile_io_rdata1),
     .io_rdata2 (_regfile_io_rdata2)
   );
-  ebreak ebreak (
+  get_instruction get_instruction (
     .instr (io_instr)
   );
   assign io_pc = _ifu_io_pc;

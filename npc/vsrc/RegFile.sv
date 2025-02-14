@@ -134,6 +134,28 @@ module RegFile(
         regfile_15 <= _GEN[io_waddr];
     end
   end // always @(posedge)
+  reg_display #(
+    .ADDR_WIDTH(4),
+    .DATA_WIDTH(32)
+  ) reg_display (
+    .regfile
+      ({regfile_15,
+        regfile_14,
+        regfile_13,
+        regfile_12,
+        regfile_11,
+        regfile_10,
+        regfile_9,
+        regfile_8,
+        regfile_7,
+        regfile_6,
+        regfile_5,
+        regfile_4,
+        regfile_3,
+        regfile_2,
+        regfile_1,
+        32'h0})
+  );
   assign io_rdata1 = _GEN[io_raddr1];
   assign io_rdata2 = _GEN[io_raddr2];
 endmodule

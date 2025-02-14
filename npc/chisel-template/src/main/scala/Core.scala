@@ -12,7 +12,7 @@ import idu._
 import exu._
 import instructions.RV32I._
 import consts.Consts._
-
+/* 
 class ebreak extends HasBlackBoxInline {
   val io = IO(new Bundle {
     val instr = Input(UInt(32.W))
@@ -34,6 +34,24 @@ class ebreak extends HasBlackBoxInline {
     """.stripMargin)
 }
 
+ */
+class get_instruction extends HasBlackBoxInline {
+  val io = IO(new Bundle {
+    val instr = Input(UInt(32.W))
+  })
+
+  setInline("get_instruction.v",
+    s"""
+    |module get_instruction(
+    |  input [31:0] instr
+    |);
+    |  function bit [31:0] get_instr;
+    |     get_instr=instr;
+    |  endfunction
+    |  export "DPI-C" function get_instr;
+    |endmodule
+    """.stripMargin)
+}
 class Core extends Module {
   val io = IO(new Bundle {
     val instr   = Input(UInt(32.W))
@@ -45,10 +63,10 @@ class Core extends Module {
     val idu = Module(new IDU)
     val exu = Module(new EXU)
     val regfile = Module(new RegFile(32,4))
-    val ebreak = Module(new ebreak)
+    val get_instruction = Module(new get_instruction)
 
-    ebreak.io.instr := io.instr
-    
+    get_instruction.io.instr := io.instr
+
     io.pc := ifu.io.pc
     
     ifu.io.alu_pc := exu.io.result
@@ -66,7 +84,8 @@ class Core extends Module {
     regfile.io.wen := idu.io.rf_wen
     regfile.io.raddr1 := idu.io.rs1
     regfile.io.raddr2 := idu.io.rs2
-
+ 
+    
     //EXU IO
     exu.io.alu_op := idu.io.alu_op
     exu.io.val1 := MuxCase(OP1_X, Array(
