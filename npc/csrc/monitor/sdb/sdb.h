@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdbool.h>
 uint32_t expr(char *e, bool *success);
 
 #define NR_WP 32

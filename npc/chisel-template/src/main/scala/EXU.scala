@@ -17,9 +17,17 @@ class EXU extends Module {
     val result = Output(UInt(32.W))
   })
 
+  val diff = Cat(0.U(1.W), io.val1) - Cat(0.U(1.W), io.val2)  // 扩展为 33 位
+  val borrow = diff(32)  // 最高位为借位标志
+  val diff_32 = diff(31, 0)  // 取低 32 位
+  val eq = diff_32.orR
+  val sum = io.val1 + io.val2
     io.result := MuxCase(0.U, Array(
-      (io.alu_op === ALU_ADD) -> (io.val1 + io.val2),
-      (io.alu_op === ALU_JALR) -> ((io.val1 + io.val2)&("hfffffffe".U)),
+      (io.alu_op === ALU_ADD) -> sum,
+      (io.alu_op === ALU_JALR) -> ( sum &("hfffffffe".U)),
+      (io.alu_op === ALU_SLTU) -> (Fill(31,0.U)##borrow).asUInt,
+      (io.alu_op === ALU_BNE) -> (Fill(31,0.U)##eq).asUInt,
+      (io.alu_op === ALU_SUB) -> diff_32,
     ))
 
 }

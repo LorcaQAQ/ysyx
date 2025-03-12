@@ -19,16 +19,30 @@ object Consts{
     val OP2_IMMI = 1.U(OP2_LEN.W)
     val OP2_IMMU = 2.U(OP2_LEN.W)
     val OP2_IMMJ = 3.U(OP2_LEN.W)
+    val OP2_IMMS = 4.U(OP2_LEN.W)
+    val OP2_RS2_IMMB = 5.U(OP2_LEN.W)
   //REG WRITE DATA
-    val REG_DATA_LEN=1
-    val REG_DATA_ALU = 0.U(REG_DATA_LEN.W)
-    val REG_DATA_PC = 1.U(REG_DATA_LEN.W)
+    val REG_DATA_LEN=2
+    val REG_DATA_ALU = 1.U(REG_DATA_LEN.W)
+    val REG_DATA_PC = 2.U(REG_DATA_LEN.W)
+    val REG_DATA_X = 0.U(REG_DATA_LEN.W)
+    val REG_DATA_MEM = 3.U(REG_DATA_LEN.W)
   //ALU OPERATION
     val ALU_LEN=4
-    val ALU_ADD = 0.U(ALU_LEN.W)
-    val ALU_JALR = 1.U(ALU_LEN.W)
+    val ALU_ADD = 1.U(ALU_LEN.W)
+    val ALU_JALR = 2.U(ALU_LEN.W)
+    val ALU_SLTU = 3.U(ALU_LEN.W)
+    val ALU_BNE = 4.U(ALU_LEN.W)
+    val ALU_SUB = 5.U(ALU_LEN.W)
+    val ALU_X= 0.U(ALU_LEN.W)
     //JUMP
-    val JUMP_LEN=1
+    val JUMP_LEN=2
     val JUMP = 1.U(JUMP_LEN.W)
     val NO_JUMP = 0.U(JUMP_LEN.W)
+    val JUMP_COND = 2.U(JUMP_LEN.W)
+    //Memory
+    val MEM_LEN=2
+    val MEM_X = 0.U(MEM_LEN.W)
+    val MEM_WRITE = 1.U(MEM_LEN.W)
+    val MEM_READ = 2.U(MEM_LEN.W)
 }

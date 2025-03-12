@@ -14,6 +14,7 @@ class IFU extends Module {
     val jump_en = Input(Bool())
     val pc   = Output(UInt(32.W))
     val snpc = Output(UInt(32.W))
+    //val instr= Output(UInt(32.W))
   })
 
   val pc = RegInit("h80000000".U(32.W))

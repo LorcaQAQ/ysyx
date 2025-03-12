@@ -6,11 +6,13 @@ module IDU(
                 io_rd,
   output [31:0] io_imm,
   output        io_rf_wen,
-                io_rf_wdata_sel,
+  output [1:0]  io_rf_wdata_sel,
   output [2:0]  io_alu_op1_sel,
                 io_alu_op2_sel,
   output [3:0]  io_alu_op,
-  output        io_jump_en
+  output [1:0]  io_jump_op,
+  output        io_mem_wen,
+                io_mem_valid
 );
 
   wire [9:0]       _GEN = {io_instr[14:12], io_instr[6:0]};
@@ -18,34 +20,97 @@ module IDU(
   wire             _csignals_T_3 = io_instr[6:0] == 7'h17;
   wire             _csignals_T_5 = io_instr[6:0] == 7'h37;
   wire             _csignals_T_7 = io_instr[6:0] == 7'h6F;
-  wire             _csignals_T_30 = _GEN == 10'h67;
-  wire             _GEN_0 = _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _csignals_T_7;
-  wire             csignals_0 = _GEN_0 | _csignals_T_30;
-  wire [2:0]       _csignals_T_18 = {2'h0, _csignals_T_30};
-  wire [2:0]       csignals_1 =
+  wire             _csignals_T_9 = _GEN == 10'h67;
+  wire             _csignals_T_11 = _GEN == 10'h103;
+  wire             _csignals_T_13 = _GEN == 10'h123;
+  wire             _csignals_T_15 = _GEN == 10'h193;
+  wire             _csignals_T_17 = _GEN == 10'hE3;
+  wire [16:0]      _GEN_0 = {io_instr[31:25], io_instr[14:12], io_instr[6:0]};
+  wire             _csignals_T_19 = _GEN_0 == 17'h8033;
+  wire             _csignals_T_22 = _GEN_0 == 17'h33;
+  wire             _GEN_1 = _csignals_T_9 | _csignals_T_11;
+  wire             csignals_0 =
+    _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _csignals_T_7 | _GEN_1
+    | ~_csignals_T_13
+    & (_csignals_T_15 | ~_csignals_T_17 & (_csignals_T_19 | _csignals_T_22));
+  wire             _GEN_2 = _csignals_T_19 | _csignals_T_22;
+  wire             _GEN_3 = _csignals_T_3 | _csignals_T_5;
+  wire [2:0]       csignals_2 =
+    _csignals_T_1
+      ? 3'h1
+      : _GEN_3
+          ? 3'h2
+          : _csignals_T_7
+              ? 3'h3
+              : _GEN_1
+                  ? 3'h1
+                  : _csignals_T_13
+                      ? 3'h4
+                      : _csignals_T_15 ? 3'h1 : _csignals_T_17 ? 3'h5 : 3'h0;
+  wire             _GEN_4 = _csignals_T_7 | _csignals_T_9;
+  wire             _GEN_5 = _csignals_T_1 | _GEN_3;
+  wire [1:0]       csignals_6 =
+    _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _GEN_4
+      ? 2'h0
+      : _csignals_T_11 ? 2'h2 : {1'h0, _csignals_T_13};
+  wire [7:0][31:0] _GEN_6 =
+    {{32'h0},
+     {32'h0},
+     {{{20{io_instr[31]}}, io_instr[7], io_instr[30:25], io_instr[11:8], 1'h0}},
+     {{{20{io_instr[31]}}, io_instr[31:25], io_instr[11:7]}},
+     {{{12{io_instr[31]}}, io_instr[19:12], io_instr[20], io_instr[30:21], 1'h0}},
+     {{io_instr[31:12], 12'h0}},
+     {{{20{io_instr[31]}}, io_instr[31:20]}},
+     {32'h0}};
+  assign io_rs1 = io_instr[19:15];
+  assign io_rs2 = io_instr[24:20];
+  assign io_rd = csignals_0 ? io_instr[11:7] : 5'h0;
+  assign io_imm = _GEN_6[csignals_2];
+  assign io_rf_wen = csignals_0;
+  assign io_rf_wdata_sel =
+    _GEN_5
+      ? 2'h1
+      : _GEN_4
+          ? 2'h2
+          : _csignals_T_11
+              ? 2'h3
+              : _csignals_T_13
+                  ? 2'h0
+                  : _csignals_T_15 ? 2'h1 : _csignals_T_17 ? 2'h0 : {1'h0, _GEN_2};
+  assign io_alu_op1_sel =
     _csignals_T_1
       ? 3'h1
       : _csignals_T_3
           ? 3'h2
-          : _csignals_T_5 ? 3'h0 : _csignals_T_7 ? 3'h2 : _csignals_T_18;
-  wire             _GEN_1 = _csignals_T_3 | _csignals_T_5;
-  wire [2:0]       csignals_2 =
-    _csignals_T_1 ? 3'h1 : _GEN_1 ? 3'h2 : _csignals_T_7 ? 3'h3 : _csignals_T_18;
-  wire             _GEN_2 = _csignals_T_1 | _GEN_1;
-  wire [3:0][31:0] _GEN_3 =
-    {{{{12{io_instr[31]}}, io_instr[19:12], io_instr[20], io_instr[30:21], 1'h0}},
-     {{io_instr[31:12], 12'h0}},
-     {{{20{io_instr[31]}}, io_instr[31:20]}},
-     {32'h0}};
-  assign io_rs1 = csignals_1 == 3'h1 ? io_instr[19:15] : 5'h0;
-  assign io_rs2 = csignals_2[1:0] == 2'h0 ? io_instr[24:20] : 5'h0;
-  assign io_rd = csignals_0 ? io_instr[11:7] : 5'h0;
-  assign io_imm = _GEN_3[csignals_2[1:0]];
-  assign io_rf_wen = csignals_0;
-  assign io_rf_wdata_sel = ~_GEN_2 & (_csignals_T_7 | _csignals_T_30);
-  assign io_alu_op1_sel = csignals_1;
+          : _csignals_T_5
+              ? 3'h0
+              : _csignals_T_7
+                  ? 3'h2
+                  : {2'h0,
+                     _csignals_T_9 | _csignals_T_11 | _csignals_T_13 | _csignals_T_15
+                       | _csignals_T_17 | _GEN_2};
   assign io_alu_op2_sel = csignals_2;
-  assign io_alu_op = _GEN_0 ? 4'h0 : {3'h0, _csignals_T_30};
-  assign io_jump_en = ~_GEN_2 & (_csignals_T_7 | _csignals_T_30);
+  assign io_alu_op =
+    _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _csignals_T_7
+      ? 4'h1
+      : _csignals_T_9
+          ? 4'h2
+          : _csignals_T_11 | _csignals_T_13
+              ? 4'h1
+              : _csignals_T_15
+                  ? 4'h3
+                  : _csignals_T_17
+                      ? 4'h4
+                      : _csignals_T_19 ? 4'h5 : {3'h0, _csignals_T_22};
+  assign io_jump_op =
+    _GEN_5
+      ? 2'h0
+      : _GEN_4
+          ? 2'h1
+          : _csignals_T_11 | _csignals_T_13 | _csignals_T_15
+              ? 2'h0
+              : {_csignals_T_17, 1'h0};
+  assign io_mem_wen = csignals_6 == 2'h1;
+  assign io_mem_valid = |csignals_6;
 endmodule
 

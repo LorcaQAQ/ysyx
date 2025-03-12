@@ -3,3 +3,7 @@
 
 // external module get_instruction
 
+// external module instr_fetch
+
+// external module MEM
+

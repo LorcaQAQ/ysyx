@@ -9,7 +9,7 @@
 #include <getopt.h>
 
 #include <utils.h>
-#include "memory/paddr.h"
+#include <memory/paddr.h>
 #include "monitor/monitor.h"
 #include "monitor/sdb/sdb.h"
 #include <generated/autoconf.h>
@@ -22,6 +22,7 @@
 
 #define MAX_INST_TO_PRINT 10
 #define NR_GPR MUXDEF(CONFIG_RVE, 16, 32)
+#define CLK_PERIOD 10    // 时钟周期（单位：ns）
 
 static void single_cycle(VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave);
 static void reset(int n, VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave);
@@ -50,7 +51,7 @@ void init_monitor(int argc, char *argv[]);
 int display_ftrace(Decode s, int n);
 void print_space(int n);
 void cpu_reg_update();
-
+vluint64_t main_time = 0;
 int main(int argc, char **argv)
 {
   init_monitor(argc, argv);
@@ -61,10 +62,10 @@ int main(int argc, char **argv)
   wave = new VerilatedVcdC; // wave
   // wave configuration
   contextp->traceEverOn(true);
-  top->trace(wave, 1);
+  top->trace(wave, 99);
   wave->open("build/top.vcd");
 
-  reset(1, top, contextp, wave);
+  reset(3, top, contextp, wave);
 
   long img_size = load_img();
   assert(img_size != 0);
@@ -78,26 +79,39 @@ int main(int argc, char **argv)
 
 static void single_cycle(VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave)
 {
-  top->clock = 0;
-  contextp->timeInc(1);
-  top->eval();
-  wave->dump(contextp->time()); // simulation time
   top->clock = 1;
-  contextp->timeInc(1);
   top->eval();
-  wave->dump(contextp->time()); // simulation time
+  //wave->dump(contextp->time()); // simulation time
+  //contextp->timeInc(1);
+  wave->dump(main_time); // simulation time
+  main_time += CLK_PERIOD / 2;
+  top->clock = 0;
+  top->eval();
+  //wave->dump(contextp->time()); // simulation time
+  //contextp->timeInc(1);
+  wave->dump(main_time); // simulation time
+  main_time += CLK_PERIOD / 2;
 }
 
 static void reset(int n, VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave)
 {
   top->reset = 1;
+  n--;
   while (n-- > 0)
   {
     single_cycle(top, contextp, wave);
   }
+
+  //add another cycle to make sure the reset is effective
+  top->clock = 1;
+  top->eval();
+  wave->dump(main_time); // simulation time
+  main_time += CLK_PERIOD / 2;
+  top->clock = 0;
   top->reset = 0;
   top->eval();
-  wave->dump(contextp->time());
+  wave->dump(main_time); // simulation time
+  main_time += CLK_PERIOD / 2;
 }
 
 void stop_simulation()
@@ -154,13 +168,13 @@ static void exec_once(Decode *s)
 {
   s->pc = top->io_pc;
   s->snpc = top->io_pc + 4;
-  top->io_instr = pmem_read((uint32_t)top->io_pc);
+  //top->io_instr = pmem_read((uint32_t)top->io_pc);
   single_cycle(top, contextp, wave);
   cpu_reg_update();
   s->dnpc = top->io_pc;
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
+  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", top->io_pc);
   int ilen = s->snpc - s->pc;
   int i;
   uint8_t *inst = (uint8_t *)&top->io_instr;

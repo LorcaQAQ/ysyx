@@ -1,3 +1,5 @@
+# This is the main Makefile for the project.
+# Define the target and the rules for the project.
 TOPNAME= Core
 NXDC_FILES = constr/top.nxdc
 INC_PATH =/usr/include/readline
@@ -13,7 +15,7 @@ BIN=$(BUILD_DIR)/$(TOPNAME)
 TOP_PACKAGE= core
 TOP_OJCET= coretop
 TOP_MAIN =CoreMain
-default: $(BIN)
+
 
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -30,42 +32,38 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 -include $(NPC_HOME)/include/config/auto.conf
 -include $(NPC_HOME)/include/config/auto.conf.cmd
 
-
-
-
-# search v files
+#Source files
+#Search verilog files
 VSOURCES=$(shell find $(abspath ./vsrc) -name "*.sv" -or -name "*.v")
-# testbench cpp files
-#DIRS-BLACKLIST-y = $(WORK_DIR)/tools
+
+# Search c/c++ files	
 DIRS-BLACKLIST-y += $(DIRS-BLACKLIST)
 SRCS-BLACKLIST-y = $(shell find -L $(DIRS-BLACKLIST-y) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-#SIM_SRCS-y=$(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 SIM_SRCS-y +=$(shell find  $(abspath $(DIRS-y)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 SIM_SRCS = $(filter-out $(SRCS-BLACKLIST-y),$(SIM_SRCS-y))
+#rule for BIN with respect to command goal
+DEPS=$(VSOURCES) $(SIM_SRCS)
 
+# Remove quotes from a string
 remove_quote = $(patsubst "%",%,$(1))
-
-
-
 
 # Extract variabls from menuconfig
 GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
 ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
 NAME    = $(GUEST_ISA)-npc-$(ENGINE)
 
+# Work like nemu, include some rules
 # Include all filelist.mk to merge file lists
 FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")
 include $(FILELIST_MK)
 
-# rules for verilator
+# rules for difftest
+include $(NPC_HOME)/tools/difftest.mk
+
+# Include path
 INC_PATH += $(WORK_DIR)/include 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
-
-
-
-# rules for difftest
-include $(NPC_HOME)/tools/difftest.mk
 
 # Extract compiler and options from menuconfig
 CC = $(call remove_quote,$(CONFIG_CC))
@@ -76,11 +74,9 @@ CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 CFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) 
-
 CXXFLAGS += $(CFLAGS)
-$(info CXXFLAGS=$(CXXFLAGS))
-#rule for BIN with respect to command goal
-DEPS=$(VSOURCES) $(SIM_SRCS)
+
+
 
 ifeq ($(MAKECMDGOALS), run_nvboard)
   DEPS += $(NVBOARD_ARCHIVE)
@@ -104,7 +100,7 @@ endif
 override ARGS ?=--log=$(BUILD_DIR)/npc-log.txt
 override ARGS += $(ARGS_DIFF)
 
-#ITRACE LIBS
+# Link llvm LIBS for ITRACE 
 LDFLAGS += $(LIBS)
 $(info LDFLAGS=$(LDFLAGS))
 
@@ -116,9 +112,6 @@ $(BIN): $(DEPS)
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
 NPC_EXEC := $(BIN) $(ARGS) $(IMG)
-
-all: default
-	@echo "Write this Makefile by your self."
 
 run_nvboard: $(BIN)
 	@$^
@@ -152,8 +145,9 @@ clean:
 	@echo "Clean all the build files."
 	rm -rf $(BUILD_DIR)
 include ../Makefile
+
 # Include rules for menuconfig
-include $(NPC_HOME)/csrc/scripts/config.mk
+include $(NPC_HOME)/scripts/config.mk
 .PHONY:default all clean sim run run_nvboard verilog gdb
 
 

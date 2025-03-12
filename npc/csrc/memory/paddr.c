@@ -5,6 +5,9 @@
 #include <common.h>
 #include <VCore.h>
 #include <isa.h>
+#include "svdpi.h"
+#include "VCore__Dpi.h"
+extern vluint64_t main_time;
 static const uint32_t img[]={
 0b00000000001100000000000010010011,//addi $ra,$$0,0x03
 0b00000000101100001000000100010011,//addi $sp,$ra,0x03
@@ -35,9 +38,17 @@ void init_isa(){
 }
 
 
-uint32_t pmem_read(uint32_t addr) {
-  uint32_t ret = *(uint32_t *)guest_to_host(addr);
+extern "C" int pmem_read(int addr) {
+  uint32_t ret = *(uint32_t *)guest_to_host((uint32_t )addr);
   return ret;
+}
+
+extern "C" void pmem_write(int waddr, int wdata) {
+  // 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
+  // `wmask`中每比特表示`wdata`中1个字节的掩码,
+  // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
+  *(uint32_t *)guest_to_host((uint32_t)waddr)= (uint32_t)wdata;
+  return;
 }
 uint32_t paddr_read(uint32_t addr, int len) {
   //IFDEF(CONFIG_MTRACE,display_mem_read(addr));

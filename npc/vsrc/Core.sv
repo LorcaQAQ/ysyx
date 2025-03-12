@@ -2,36 +2,53 @@
 module Core(
   input         clock,
                 reset,
-  input  [31:0] io_instr,
-  output [31:0] io_pc,
+  output [31:0] io_instr,
+                io_pc,
                 io_result
 );
 
-  wire [31:0] _regfile_io_rdata1;
-  wire [31:0] _regfile_io_rdata2;
-  wire [31:0] _exu_io_result;
-  wire [4:0]  _idu_io_rs1;
-  wire [4:0]  _idu_io_rs2;
-  wire [4:0]  _idu_io_rd;
-  wire [31:0] _idu_io_imm;
-  wire        _idu_io_rf_wen;
-  wire        _idu_io_rf_wdata_sel;
-  wire [2:0]  _idu_io_alu_op1_sel;
-  wire [2:0]  _idu_io_alu_op2_sel;
-  wire [3:0]  _idu_io_alu_op;
-  wire        _idu_io_jump_en;
-  wire [31:0] _ifu_io_pc;
-  wire [31:0] _ifu_io_snpc;
+  wire [31:0]      _mem_mem_rdata;
+  wire [31:0]      _instr_fetch_instr;
+  wire [31:0]      _regfile_io_rdata1;
+  wire [31:0]      _regfile_io_rdata2;
+  wire [31:0]      _exu_io_result;
+  wire [4:0]       _idu_io_rs1;
+  wire [4:0]       _idu_io_rs2;
+  wire [4:0]       _idu_io_rd;
+  wire [31:0]      _idu_io_imm;
+  wire             _idu_io_rf_wen;
+  wire [1:0]       _idu_io_rf_wdata_sel;
+  wire [2:0]       _idu_io_alu_op1_sel;
+  wire [2:0]       _idu_io_alu_op2_sel;
+  wire [3:0]       _idu_io_alu_op;
+  wire [1:0]       _idu_io_jump_op;
+  wire             _idu_io_mem_wen;
+  wire             _idu_io_mem_valid;
+  wire [31:0]      _ifu_io_pc;
+  wire [31:0]      _ifu_io_snpc;
+  wire             jal_en = _idu_io_jump_op == 2'h1;
+  wire             _ifu_io_alu_pc_T_2 = _idu_io_jump_op == 2'h2;
+  wire             branch_en = _ifu_io_alu_pc_T_2 & (|_exu_io_result);
+  wire [3:0][31:0] _GEN = {{_mem_mem_rdata}, {_ifu_io_snpc}, {_exu_io_result}, {32'h0}};
+  wire [31:0]      io_result_0 =
+    _idu_io_alu_op1_sel == 3'h0 | _idu_io_alu_op1_sel == 3'h1
+      ? _regfile_io_rdata1
+      : _idu_io_alu_op1_sel == 3'h2 ? _ifu_io_pc : 32'h0;
   IFU ifu (
     .clock      (clock),
     .reset      (reset),
-    .io_alu_pc  (_exu_io_result),
-    .io_jump_en (_idu_io_jump_en),
+    .io_alu_pc
+      (jal_en
+         ? _exu_io_result
+         : _idu_io_jump_op == 2'h0 | ~_ifu_io_alu_pc_T_2
+             ? _ifu_io_pc
+             : branch_en ? _ifu_io_pc + _idu_io_imm : _exu_io_result),
+    .io_jump_en (jal_en | branch_en),
     .io_pc      (_ifu_io_pc),
     .io_snpc    (_ifu_io_snpc)
   );
   IDU idu (
-    .io_instr        (io_instr),
+    .io_instr        (_instr_fetch_instr),
     .io_rs1          (_idu_io_rs1),
     .io_rs2          (_idu_io_rs2),
     .io_rd           (_idu_io_rd),
@@ -41,20 +58,22 @@ module Core(
     .io_alu_op1_sel  (_idu_io_alu_op1_sel),
     .io_alu_op2_sel  (_idu_io_alu_op2_sel),
     .io_alu_op       (_idu_io_alu_op),
-    .io_jump_en      (_idu_io_jump_en)
+    .io_jump_op      (_idu_io_jump_op),
+    .io_mem_wen      (_idu_io_mem_wen),
+    .io_mem_valid    (_idu_io_mem_valid)
   );
   EXU exu (
     .io_alu_op (_idu_io_alu_op),
-    .io_val1
-      (_idu_io_alu_op1_sel == 3'h0 | _idu_io_alu_op1_sel == 3'h1
-         ? _regfile_io_rdata1
-         : _idu_io_alu_op1_sel == 3'h2 ? _ifu_io_pc : 32'h0),
-    .io_val2   (_idu_io_alu_op2_sel == 3'h0 ? _regfile_io_rdata2 : _idu_io_imm),
+    .io_val1   (io_result_0),
+    .io_val2
+      (_idu_io_alu_op2_sel == 3'h5 | _idu_io_alu_op2_sel == 3'h0
+         ? _regfile_io_rdata2
+         : _idu_io_imm),
     .io_result (_exu_io_result)
   );
   RegFile regfile (
     .clock     (clock),
-    .io_wdata  (_idu_io_rf_wdata_sel ? _ifu_io_snpc : _exu_io_result),
+    .io_wdata  (_GEN[_idu_io_rf_wdata_sel]),
     .io_waddr  (_idu_io_rd[3:0]),
     .io_wen    (_idu_io_rf_wen),
     .io_raddr1 (_idu_io_rs1[3:0]),
@@ -63,9 +82,26 @@ module Core(
     .io_rdata2 (_regfile_io_rdata2)
   );
   get_instruction get_instruction (
-    .instr (io_instr)
+    .instr (_instr_fetch_instr)
   );
+  instr_fetch instr_fetch (
+    .pc    (_ifu_io_pc),
+    .reset (reset),
+    .instr (_instr_fetch_instr)
+  );
+  MEM #(
+    .DATA_WIDTH(32)
+  ) mem (
+    .clk       (clock),
+    .valid     (_idu_io_mem_valid),
+    .mem_wen   (_idu_io_mem_wen),
+    .mem_waddr (_exu_io_result),
+    .mem_wdata (_regfile_io_rdata2),
+    .mem_rdata (_mem_mem_rdata),
+    .mem_raddr (_exu_io_result)
+  );
+  assign io_instr = _instr_fetch_instr;
   assign io_pc = _ifu_io_pc;
-  assign io_result = _exu_io_result;
+  assign io_result = io_result_0;
 endmodule
 

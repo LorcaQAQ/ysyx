@@ -6,10 +6,17 @@ module EXU(
   output [31:0] io_result
 );
 
-  wire [31:0] _io_result_T_4 = io_val1 + io_val2;
+  wire [32:0] _diff_T_2 = {1'h0, io_val1} - {1'h0, io_val2};
+  wire [31:0] _sum_T = io_val1 + io_val2;
   assign io_result =
-    io_alu_op == 4'h0
-      ? _io_result_T_4
-      : io_alu_op == 4'h1 ? _io_result_T_4 & 32'hFFFFFFFE : 32'h0;
+    io_alu_op == 4'h1
+      ? _sum_T
+      : io_alu_op == 4'h2
+          ? _sum_T & 32'hFFFFFFFE
+          : io_alu_op == 4'h3
+              ? {31'h0, _diff_T_2[32]}
+              : io_alu_op == 4'h4
+                  ? {31'h0, |(_diff_T_2[31:0])}
+                  : io_alu_op == 4'h5 ? _diff_T_2[31:0] : 32'h0;
 endmodule
 

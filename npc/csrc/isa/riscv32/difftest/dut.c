@@ -19,6 +19,12 @@
 #define NR_GPR MUXDEF(CONFIG_RVE, 16, 32)
 #include <cpu/cpu.h>
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
+  if (ref_r->pc != cpu.pc) {
+    Log("Difftest: %s at pc = " FMT_WORD,
+        ANSI_FMT("ERROR", ANSI_FG_RED),  cpu.pc);
+    Log("The value of pc  is different, ref: 0x%08x, dut: 0x%08x", ref_r->pc,  pc); 
+    return false;
+  }
   for (int i = 0; i < NR_GPR; i++) {
     if(ref_r->gpr[i]!=cpu.gpr[i]) {
        Log("Difftest: %s at pc = " FMT_WORD,
