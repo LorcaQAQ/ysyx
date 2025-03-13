@@ -29,6 +29,7 @@ class IDU extends Module {
 
     val mem_wen = Output(Bool())
     val mem_valid = Output(Bool())
+    val load_store_range = Output(UInt(LOAD_LEN.W))
 
   })
 
@@ -41,23 +42,34 @@ class IDU extends Module {
 
 
     val csignals =ListLookup(
-      io.instr,List(REG_WRITE_X,OP1_X,OP2_RS2,REG_DATA_X,ALU_X,NO_JUMP,MEM_X),
+      io.instr,List(REG_WRITE_X,OP1_X,OP2_RS2,REG_DATA_X,ALU_X,NO_JUMP,MEM_X,LOAD_Store_X),
       Array(
-        ADDI -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X),
-        AUIPC -> List(REG_WRITE_EN,OP1_PC,OP2_IMMU,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X),
-        LUI -> List(REG_WRITE_EN,OP1_X,OP2_IMMU,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X),
-        JAL -> List(REG_WRITE_EN,OP1_PC,OP2_IMMJ,REG_DATA_PC,ALU_ADD,JUMP,MEM_X),
-        JALR -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_PC,ALU_JALR,JUMP,MEM_X),
-        LW -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_MEM,ALU_ADD,NO_JUMP,MEM_READ),
-        SW -> List(REG_WRITE_X,OP1_RS1,OP2_IMMS,REG_DATA_X,ALU_ADD,NO_JUMP,MEM_WRITE),
-        SLTIU -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_ALU,ALU_SLTU,NO_JUMP,MEM_X),
-        BNE -> List(REG_WRITE_X,OP1_RS1,OP2_RS2_IMMB,REG_DATA_X,ALU_BNE,JUMP_COND,MEM_X),
-        SUB -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_SUB,NO_JUMP,MEM_X),
-        ADD -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X),
+        ADDI -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X,LOAD_Store_X),
+        AUIPC -> List(REG_WRITE_EN,OP1_PC,OP2_IMMU,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X,LOAD_Store_X),
+        LUI -> List(REG_WRITE_EN,OP1_X,OP2_IMMU,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X,LOAD_Store_X),
+        JAL -> List(REG_WRITE_EN,OP1_PC,OP2_IMMJ,REG_DATA_PC,ALU_ADD,JUMP,MEM_X,LOAD_Store_X),
+        JALR -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_PC,ALU_JALR,JUMP,MEM_X,LOAD_Store_X),
+        LW -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_MEM,ALU_ADD,NO_JUMP,MEM_READ,Word),
+        SW -> List(REG_WRITE_X,OP1_RS1,OP2_IMMS,REG_DATA_X,ALU_ADD,NO_JUMP,MEM_WRITE,Word),
+        SLTIU -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_ALU,ALU_SLTU,NO_JUMP,MEM_X,LOAD_Store_X),
+        BNE -> List(REG_WRITE_X,OP1_RS1,OP2_RS2_IMMB,REG_DATA_X,ALU_BNE,JUMP_COND,MEM_X,LOAD_Store_X),
+        SUB -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_SUB,NO_JUMP,MEM_X,LOAD_Store_X),
+        ADD -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_ADD,NO_JUMP,MEM_X,LOAD_Store_X),
+        XOR -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_XOR,NO_JUMP,MEM_X,LOAD_Store_X),
+        SLTU -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_SLTU,NO_JUMP,MEM_X,LOAD_Store_X),
+        SRAI -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_ALU,ALU_SRA,NO_JUMP,MEM_X,LOAD_Store_X),
+        LBU -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_MEM,ALU_ADD,NO_JUMP,MEM_READ,BYTE_U),
+        SH -> List(REG_WRITE_X,OP1_RS1,OP2_IMMS,REG_DATA_X,ALU_ADD,NO_JUMP,MEM_WRITE,Half_U),
+        SLL -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_SLL,NO_JUMP,MEM_X,LOAD_Store_X),
+        AND -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_AND,NO_JUMP,MEM_X,LOAD_Store_X),
+        ANDI -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_ALU,ALU_AND,NO_JUMP,MEM_X,LOAD_Store_X),
+        XORI -> List(REG_WRITE_EN,OP1_RS1,OP2_IMMI,REG_DATA_ALU,ALU_XOR,NO_JUMP,MEM_X,LOAD_Store_X),
+        OR -> List(REG_WRITE_EN,OP1_RS1,OP2_RS2,REG_DATA_ALU,ALU_OR,NO_JUMP,MEM_X,LOAD_Store_X),
+        SB -> List(REG_WRITE_X,OP1_RS1,OP2_IMMS,REG_DATA_X,ALU_ADD,NO_JUMP,MEM_WRITE,Word),
       )
     )
 
-    val rf_wen::op1_sel::op2_sel::rf_wdata_sel::alu_op::jump_op::mem_op::Nil= csignals
+    val rf_wen::op1_sel::op2_sel::rf_wdata_sel::alu_op::jump_op::mem_op::load_store_range::Nil= csignals
 
     io.rs1 :=io.instr(19, 15)
     io.rs2 :=io.instr(24, 20)
@@ -82,6 +94,6 @@ class IDU extends Module {
 
     io.mem_wen := (mem_op === MEM_WRITE)
     io.mem_valid := (mem_op =/= MEM_X)
-    
+    io.load_store_range := load_store_range
 }
 

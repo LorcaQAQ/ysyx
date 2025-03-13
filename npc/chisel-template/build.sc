@@ -22,17 +22,13 @@ object coretop extends SbtModule { m =>
   override def scalacPluginIvyDeps = Agg(
     ivy"org.chipsalliance:::chisel-plugin:6.6.0",
   )
-    object test extends SbtModuleTests with TestModule.ScalaTest {
-    override def ivyDeps = m.ivyDeps() ++ Agg(
-      ivy"org.scalatest::scalatest::3.2.16"
-    )
-    
-  }
- /*object test extends SbtModuleTests with TestModule.ScalaTest{  // 测试模块
-    def ivyDeps = Agg(
-      ivy"org.scalatest::scalatest:3.2.16",       // ScalaTest
-      ivy"edu.berkeley.cs::chiseltest:6.6.0",      // ChiselTest（版本需与 Chisel 匹配）
+    // 测试模块
+  object test extends ScalaTests { 
+    def ivyDeps = super.ivyDeps() ++ Agg(  // 合并主模块依赖
+      ivy"org.scalatest::scalatest:3.2.16",
+      ivy"edu.berkeley.cs::chiseltest:6.0.0"  // 注意包名是 edu.berkeley.cs
     )
     def testFramework = "org.scalatest.tools.Framework"
-  }*/
+  }
+
 }

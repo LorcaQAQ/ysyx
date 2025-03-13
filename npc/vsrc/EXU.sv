@@ -6,17 +6,26 @@ module EXU(
   output [31:0] io_result
 );
 
-  wire [32:0] _diff_T_2 = {1'h0, io_val1} - {1'h0, io_val2};
-  wire [31:0] _sum_T = io_val1 + io_val2;
-  assign io_result =
-    io_alu_op == 4'h1
-      ? _sum_T
-      : io_alu_op == 4'h2
-          ? _sum_T & 32'hFFFFFFFE
-          : io_alu_op == 4'h3
-              ? {31'h0, _diff_T_2[32]}
-              : io_alu_op == 4'h4
-                  ? {31'h0, |(_diff_T_2[31:0])}
-                  : io_alu_op == 4'h5 ? _diff_T_2[31:0] : 32'h0;
+  wire [32:0]       _diff_T_2 = {1'h0, io_val1} - {1'h0, io_val2};
+  wire [31:0]       _sum_T = io_val1 + io_val2;
+  wire [62:0]       sllvalue = {31'h0, io_val1} << io_val2[4:0];
+  wire [15:0][31:0] _GEN =
+    {{32'h0},
+     {32'h0},
+     {32'h0},
+     {32'h0},
+     {32'h0},
+     {io_val1 | io_val2},
+     {io_val1 & io_val2},
+     {sllvalue[31:0]},
+     {$signed($signed(io_val1) >>> io_val2[4:0])},
+     {io_val1 ^ io_val2},
+     {_diff_T_2[31:0]},
+     {{31'h0, |(_diff_T_2[31:0])}},
+     {{31'h0, _diff_T_2[32]}},
+     {_sum_T & 32'hFFFFFFFE},
+     {_sum_T},
+     {32'h0}};
+  assign io_result = _GEN[io_alu_op];
 endmodule
 

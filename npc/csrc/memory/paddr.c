@@ -43,11 +43,20 @@ extern "C" int pmem_read(int addr) {
   return ret;
 }
 
-extern "C" void pmem_write(int waddr, int wdata) {
+extern "C" void pmem_write(int waddr, int wdata, char wmask) {
   // 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-  *(uint32_t *)guest_to_host((uint32_t)waddr)= (uint32_t)wdata;
+  uint32_t aligned_waddr = waddr & ~0x3u;
+  uint32_t new_data = *(uint32_t *)guest_to_host(aligned_waddr);
+  uint8_t mask = (uint8_t)wmask;
+  for(int i = 0; i < 4; i++) {
+    if(mask & (1 << i)) {
+      uint8_t byte_to_write = (wdata >> (i * 8)) & 0xFF;
+      new_data = (new_data & ~(0xFF << (i * 8))) | (byte_to_write << (i * 8));
+    }
+  }
+  *(uint32_t *)guest_to_host((uint32_t)waddr)= new_data;
   return;
 }
 uint32_t paddr_read(uint32_t addr, int len) {

@@ -116,12 +116,20 @@ class Core extends Module {
     //IDU IO
     idu.io.instr := io.instr
 
+    val load_store_range =Wire(UInt(LOAD_LEN.W))
+    load_store_range := idu.io.load_store_range
+
+    val mem_rdata = Wire(UInt(32.W))
+    mem_rdata := MuxCase(0.U, Array(
+      (load_store_range === Word) ->  mem.io.mem_rdata,
+      (load_store_range === BYTE_U) ->  Cat(Fill(24,0.U),mem.io.mem_rdata(7,0))
+    ))  
     //regfile IO
     regfile.io.waddr := idu.io.rd
     regfile.io.wdata := MuxCase(0.U, Array(
       (idu.io.rf_wdata_sel === REG_DATA_ALU) -> exu.io.result,
       (idu.io.rf_wdata_sel === REG_DATA_PC) -> ifu.io.snpc,
-      (idu.io.rf_wdata_sel === REG_DATA_MEM) -> mem.io.mem_rdata
+      (idu.io.rf_wdata_sel === REG_DATA_MEM) -> mem_rdata
     ))
     regfile.io.wen := idu.io.rf_wen
     regfile.io.raddr1 := idu.io.rs1
@@ -138,6 +146,11 @@ class Core extends Module {
     exu.io.val2 := Mux(idu.io.alu_op2_sel === OP2_RS2_IMMB || idu.io.alu_op2_sel === OP2_RS2, regfile.io.rdata2, idu.io.imm)
 
     //MEM IO
+    val mem_wdata = Wire(UInt(32.W))
+    mem_wdata := MuxCase(0.U, Array(
+      (load_store_range === Word) -> regfile.io.rdata2,
+      (load_store_range === Half_U) -> Cat(Fill(16,0.U),regfile.io.rdata2(15,0))
+    ))
     mem.io.valid := idu.io.mem_valid
     mem.io.mem_wen := idu.io.mem_wen
     mem.io.mem_waddr := exu.io.result

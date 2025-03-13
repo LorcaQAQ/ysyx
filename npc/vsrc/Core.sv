@@ -24,12 +24,19 @@ module Core(
   wire [1:0]       _idu_io_jump_op;
   wire             _idu_io_mem_wen;
   wire             _idu_io_mem_valid;
+  wire [1:0]       _idu_io_load_store_range;
   wire [31:0]      _ifu_io_pc;
   wire [31:0]      _ifu_io_snpc;
   wire             jal_en = _idu_io_jump_op == 2'h1;
   wire             _ifu_io_alu_pc_T_2 = _idu_io_jump_op == 2'h2;
   wire             branch_en = _ifu_io_alu_pc_T_2 & (|_exu_io_result);
-  wire [3:0][31:0] _GEN = {{_mem_mem_rdata}, {_ifu_io_snpc}, {_exu_io_result}, {32'h0}};
+  wire [3:0][31:0] _GEN =
+    {{_idu_io_load_store_range == 2'h1
+        ? _mem_mem_rdata
+        : _idu_io_load_store_range == 2'h2 ? {24'h0, _mem_mem_rdata[7:0]} : 32'h0},
+     {_ifu_io_snpc},
+     {_exu_io_result},
+     {32'h0}};
   wire [31:0]      io_result_0 =
     _idu_io_alu_op1_sel == 3'h0 | _idu_io_alu_op1_sel == 3'h1
       ? _regfile_io_rdata1
@@ -48,19 +55,20 @@ module Core(
     .io_snpc    (_ifu_io_snpc)
   );
   IDU idu (
-    .io_instr        (_instr_fetch_instr),
-    .io_rs1          (_idu_io_rs1),
-    .io_rs2          (_idu_io_rs2),
-    .io_rd           (_idu_io_rd),
-    .io_imm          (_idu_io_imm),
-    .io_rf_wen       (_idu_io_rf_wen),
-    .io_rf_wdata_sel (_idu_io_rf_wdata_sel),
-    .io_alu_op1_sel  (_idu_io_alu_op1_sel),
-    .io_alu_op2_sel  (_idu_io_alu_op2_sel),
-    .io_alu_op       (_idu_io_alu_op),
-    .io_jump_op      (_idu_io_jump_op),
-    .io_mem_wen      (_idu_io_mem_wen),
-    .io_mem_valid    (_idu_io_mem_valid)
+    .io_instr            (_instr_fetch_instr),
+    .io_rs1              (_idu_io_rs1),
+    .io_rs2              (_idu_io_rs2),
+    .io_rd               (_idu_io_rd),
+    .io_imm              (_idu_io_imm),
+    .io_rf_wen           (_idu_io_rf_wen),
+    .io_rf_wdata_sel     (_idu_io_rf_wdata_sel),
+    .io_alu_op1_sel      (_idu_io_alu_op1_sel),
+    .io_alu_op2_sel      (_idu_io_alu_op2_sel),
+    .io_alu_op           (_idu_io_alu_op),
+    .io_jump_op          (_idu_io_jump_op),
+    .io_mem_wen          (_idu_io_mem_wen),
+    .io_mem_valid        (_idu_io_mem_valid),
+    .io_load_store_range (_idu_io_load_store_range)
   );
   EXU exu (
     .io_alu_op (_idu_io_alu_op),

@@ -28,8 +28,8 @@ class IDUSpec extends AnyFlatSpec  with ChiselScalatestTester{
     "DUT" should "pass" in {
       test (new IDU ){ dut =>
         dut.io.instr.poke("h40d50533 ".U)
-        //dut.clock.step ()
-        println("Result is: " + dut.csignals(0).peekValue())
+        dut.clock.step ()
+        dut.csignals(0).expect (1.U)
       }
     }
   }
