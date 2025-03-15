@@ -29,7 +29,7 @@ object Consts{
     val REG_DATA_X = 0.U(REG_DATA_LEN.W)
     val REG_DATA_MEM = 3.U(REG_DATA_LEN.W)
   //ALU OPERATION
-    val ALU_LEN=4
+    val ALU_LEN=5
     val ALU_ADD = 1.U(ALU_LEN.W)
     val ALU_JALR = 2.U(ALU_LEN.W)
     val ALU_SLTU = 3.U(ALU_LEN.W)
@@ -41,6 +41,13 @@ object Consts{
     val ALU_SLL = 8.U(ALU_LEN.W)  
     val ALU_AND = 9.U(ALU_LEN.W)
     val ALU_OR = 10.U(ALU_LEN.W)
+    val ALU_BGE = 11.U(ALU_LEN.W)
+    val ALU_BEQ = 12.U(ALU_LEN.W)
+    val ALU_SRL = 13.U(ALU_LEN.W)
+    val ALU_BGEU = 14.U(ALU_LEN.W)
+    val ALU_BLTU = 15.U(ALU_LEN.W)
+    val ALU_SLT = 16.U(ALU_LEN.W)
+    val ALU_BLT = 17.U(ALU_LEN.W)
     //JUMP
     val JUMP_LEN=2
     val JUMP = 1.U(JUMP_LEN.W)
@@ -52,9 +59,11 @@ object Consts{
     val MEM_WRITE = 1.U(MEM_LEN.W)
     val MEM_READ = 2.U(MEM_LEN.W)
     //Load and Store
-    val LOAD_LEN=2
+    val LOAD_LEN=3
     val LOAD_Store_X = 0.U(LOAD_LEN.W)
     val Word = 1.U(LOAD_LEN.W)
     val BYTE_U = 2.U(LOAD_LEN.W)
     val Half_U = 3.U(LOAD_LEN.W)
+    val Half_S = 4.U(LOAD_LEN.W)
+    val BYTE_S = 5.U(LOAD_LEN.W)
 }

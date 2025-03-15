@@ -21,6 +21,7 @@ class MEM (data_width:Int) extends BlackBox (Map(
     val mem_wdata = Input(UInt(data_width.W))
     val mem_rdata = Output(UInt(data_width.W))
     val mem_raddr = Input(UInt(data_width.W))
+    val mem_wmask = Input(UInt(8.W))
 
   })
 setInline("MEM.v",
@@ -36,6 +37,7 @@ setInline("MEM.v",
     |  input [DATA_WIDTH-1:0] mem_waddr,
     |  input   mem_wen,
     |  input [DATA_WIDTH-1:0] mem_raddr,
+    |  input [7:0] mem_wmask,
     |  output reg [DATA_WIDTH-1:0] mem_rdata
     |);
     |
@@ -45,7 +47,7 @@ setInline("MEM.v",
     |  if (valid) begin // 有读写请求时
     |    mem_rdata = pmem_read(mem_raddr);
     |    if (mem_wen) begin // 有写请求时
-    |      pmem_write(mem_waddr, mem_wdata, 8'hff);
+    |      pmem_write(mem_waddr, mem_wdata, mem_wmask);
     |    end
     |  end
     |  else begin

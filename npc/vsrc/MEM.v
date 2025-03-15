@@ -10,6 +10,7 @@ module MEM
   input [DATA_WIDTH-1:0] mem_waddr,
   input   mem_wen,
   input [DATA_WIDTH-1:0] mem_raddr,
+  input [7:0] mem_wmask,
   output reg [DATA_WIDTH-1:0] mem_rdata
 );
 
@@ -19,7 +20,7 @@ always @(valid or mem_wdata or mem_waddr or mem_wen or mem_raddr) begin
   if (valid) begin // 有读写请求时
     mem_rdata = pmem_read(mem_raddr);
     if (mem_wen) begin // 有写请求时
-      pmem_write(mem_waddr, mem_wdata, 8'hff);
+      pmem_write(mem_waddr, mem_wdata, mem_wmask);
     end
   end
   else begin

@@ -49,10 +49,17 @@ class EXU extends Module {
   val diff = Cat(0.U(1.W), io.val1) - Cat(0.U(1.W), io.val2)  // 扩展为 33 位
   val borrow = diff(32)  // 最高位为借位标志
   val diff_32 = diff(31, 0)  // 取低 32 位
-  val eq = diff_32.orR
+  val eq = !diff_32.orR
   val sum = io.val1 + io.val2
   val xor=io.val1 ^ io.val2
 
+  val diff_s= io.val1.asSInt -  io.val2.asSInt
+  val sign_val1=io.val1.asSInt(31)
+  val sign_val2=io.val2.asSInt(31)
+  val overflow = (sign_val1 =/= sign_val2) && (sign_val2 === diff_s(31))
+
+  val le = Mux(overflow, !diff_s(31), diff_s(31))//less than or equal 
+  val less =le && !eq
   /*  val sra= Module(new BarrelShift(32))
   sra.io.in := io.val1
   sra.io.shamt := io.val2(4,0)
@@ -62,19 +69,27 @@ class EXU extends Module {
   sravalue := sra.io.out*/
   val sravalue = (io.val1.asSInt >> io.val2(4,0)).asUInt
   val sllvalue = io.val1 << io.val2(4,0)
+  val srlvalue = io.val1 >> io.val2(4,0)
   val andvalue = io.val1 & io.val2
   val or=io.val1 | io.val2
     io.result := MuxCase(0.U, Array(
       (io.alu_op === ALU_ADD) -> sum,
       (io.alu_op === ALU_JALR) -> ( sum &("hfffffffe".U)),
       (io.alu_op === ALU_SLTU) -> (Fill(31,0.U)##borrow).asUInt,
-      (io.alu_op === ALU_BNE) -> (Fill(31,0.U)##eq).asUInt,
+      (io.alu_op === ALU_BNE) -> (Fill(31,0.U)## eq).asUInt,
       (io.alu_op === ALU_SUB) -> diff_32,
       (io.alu_op === ALU_XOR) -> xor,
       (io.alu_op === ALU_SRA) -> sravalue,
       (io.alu_op === ALU_SLL) -> sllvalue,
       (io.alu_op === ALU_AND) -> andvalue,
-      (io.alu_op === ALU_OR) -> or
+      (io.alu_op === ALU_OR) -> or,
+      (io.alu_op === ALU_BGE) -> (Fill(31,0.U)##(le)).asUInt,
+      (io.alu_op === ALU_BEQ) -> (Fill(31,0.U)## !eq).asUInt,
+      (io.alu_op === ALU_SRL) -> srlvalue,
+      (io.alu_op === ALU_BGEU) -> (Fill(31,0.U)## borrow).asUInt,
+      (io.alu_op === ALU_BLTU) -> (Fill(31,0.U)## !borrow).asUInt,
+      (io.alu_op === ALU_SLT) -> (Fill(31,0.U)##less).asUInt,
+      (io.alu_op === ALU_BLT) -> (Fill(31,0.U)## !less).asUInt
     ))
 
 }

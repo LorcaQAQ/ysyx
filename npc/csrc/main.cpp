@@ -52,6 +52,9 @@ int display_ftrace(Decode s, int n);
 void print_space(int n);
 void cpu_reg_update();
 vluint64_t main_time = 0;
+
+int is_exit_status_bad(); 
+
 int main(int argc, char **argv)
 {
   init_monitor(argc, argv);
@@ -74,7 +77,7 @@ int main(int argc, char **argv)
   wave->close();
   delete top;
   delete contextp;
-  return 0;
+  return is_exit_status_bad();
 }
 
 static void single_cycle(VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave)
@@ -153,7 +156,7 @@ static void trace_and_difftest(Decode *_this, uint32_t dnpc)
       if (cur->new_value != cur->old_value)
       {
         npc_state.state = NPC_STOP;
-        printf("Detect changes in No.%d watchpoint:\"%s\"\nOld value=%u\nNew value=%u\n", cur->NO, cur->expr, cur->old_value, cur->new_value);
+        printf("Detect changes in No.%d watchpoint:\"%s\"\nOld value=%u\nNew value=%u\n at PC="FMT_WORD"\n", cur->NO, cur->expr, cur->old_value, cur->new_value,cpu.pc);
       }
     }
     else
@@ -347,4 +350,9 @@ void cpu_reg_update()
     cpu.gpr[i]=get_reg(i);
   }
   cpu.pc=top->io_pc;
+}
+int is_exit_status_bad() {
+  int good = (npc_state.state == NPC_END && npc_state.halt_ret == 0)
+		||(npc_state.state == NPC_QUIT);
+  return !good;
 }

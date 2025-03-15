@@ -18,6 +18,9 @@ static const uint32_t img[]={
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 extern VCore* top;
 
+void display_mem_read(paddr_t addr);
+void display_mem_write(paddr_t addr, word_t data);
+
 static void restart() {
   /* Set the initial program counter. */
   cpu.pc = RESET_VECTOR;
@@ -39,6 +42,7 @@ void init_isa(){
 
 
 extern "C" int pmem_read(int addr) {
+  //IFDEF(CONFIG_MTRACE,display_mem_read(addr));
   uint32_t ret = *(uint32_t *)guest_to_host((uint32_t )addr);
   return ret;
 }
@@ -47,8 +51,9 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
   // 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-  uint32_t aligned_waddr = waddr & ~0x3u;
-  uint32_t new_data = *(uint32_t *)guest_to_host(aligned_waddr);
+  
+  //uint32_t aligned_waddr = waddr & ~0x3u;//对齐写入会引起错误
+  uint32_t new_data = *(uint32_t *)guest_to_host(waddr);
   uint8_t mask = (uint8_t)wmask;
   for(int i = 0; i < 4; i++) {
     if(mask & (1 << i)) {
@@ -56,13 +61,13 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
       new_data = (new_data & ~(0xFF << (i * 8))) | (byte_to_write << (i * 8));
     }
   }
+  IFDEF(CONFIG_MTRACE,display_mem_write(waddr,new_data));
   *(uint32_t *)guest_to_host((uint32_t)waddr)= new_data;
   return;
 }
 uint32_t paddr_read(uint32_t addr, int len) {
-  //IFDEF(CONFIG_MTRACE,display_mem_read(addr));
   if (in_pmem(addr)) return pmem_read(addr);
-  //IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
 }
@@ -73,4 +78,11 @@ void init_mem() {
   #endif
     IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
     Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
+  }
+  void display_mem_read(paddr_t addr){
+    printf("Memory read at " FMT_PADDR ", PC=" FMT_WORD"\n", addr, cpu.pc);
+  }
+  
+  void display_mem_write(paddr_t addr, word_t data){
+    printf("Memory write at " FMT_PADDR ", PC=" FMT_WORD", DATA is " FMT_WORD"\n", addr, cpu.pc,data);
   }

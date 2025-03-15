@@ -20,25 +20,36 @@ module Core(
   wire [1:0]       _idu_io_rf_wdata_sel;
   wire [2:0]       _idu_io_alu_op1_sel;
   wire [2:0]       _idu_io_alu_op2_sel;
-  wire [3:0]       _idu_io_alu_op;
+  wire [4:0]       _idu_io_alu_op;
   wire [1:0]       _idu_io_jump_op;
   wire             _idu_io_mem_wen;
   wire             _idu_io_mem_valid;
-  wire [1:0]       _idu_io_load_store_range;
+  wire [2:0]       _idu_io_load_store_range;
   wire [31:0]      _ifu_io_pc;
   wire [31:0]      _ifu_io_snpc;
   wire             jal_en = _idu_io_jump_op == 2'h1;
   wire             _ifu_io_alu_pc_T_2 = _idu_io_jump_op == 2'h2;
-  wire             branch_en = _ifu_io_alu_pc_T_2 & (|_exu_io_result);
-  wire [3:0][31:0] _GEN =
-    {{_idu_io_load_store_range == 2'h1
-        ? _mem_mem_rdata
-        : _idu_io_load_store_range == 2'h2 ? {24'h0, _mem_mem_rdata[7:0]} : 32'h0},
-     {_ifu_io_snpc},
-     {_exu_io_result},
+  wire             branch_en =
+    _ifu_io_alu_pc_T_2 & _exu_io_result == 32'h0
+    & (_idu_io_alu_op == 5'h4 | _idu_io_alu_op == 5'hB | _idu_io_alu_op == 5'hC
+       | _idu_io_alu_op == 5'hE | _idu_io_alu_op == 5'hF | _idu_io_alu_op == 5'h11);
+  wire             _mem_io_mem_wmask_T = _idu_io_load_store_range == 3'h1;
+  wire             _mem_io_mem_wmask_T_3 = _idu_io_load_store_range == 3'h2;
+  wire             _mem_io_mem_wmask_T_1 = _idu_io_load_store_range == 3'h3;
+  wire [7:0][31:0] _GEN =
+    {{32'h0},
+     {32'h0},
+     {{{24{_mem_mem_rdata[7]}}, _mem_mem_rdata[7:0]}},
+     {{{16{_mem_mem_rdata[15]}}, _mem_mem_rdata[15:0]}},
+     {{16'h0, _mem_mem_rdata[15:0]}},
+     {{24'h0, _mem_mem_rdata[7:0]}},
+     {_mem_mem_rdata},
      {32'h0}};
+  wire [3:0][31:0] _GEN_0 =
+    {{_GEN[_idu_io_load_store_range]}, {_ifu_io_snpc}, {_exu_io_result}, {32'h0}};
+  wire             _exu_io_val1_T = _idu_io_alu_op1_sel == 3'h0;
   wire [31:0]      io_result_0 =
-    _idu_io_alu_op1_sel == 3'h0 | _idu_io_alu_op1_sel == 3'h1
+    _exu_io_val1_T | _idu_io_alu_op1_sel == 3'h1
       ? _regfile_io_rdata1
       : _idu_io_alu_op1_sel == 3'h2 ? _ifu_io_pc : 32'h0;
   IFU ifu (
@@ -47,9 +58,9 @@ module Core(
     .io_alu_pc
       (jal_en
          ? _exu_io_result
-         : _idu_io_jump_op == 2'h0 | ~_ifu_io_alu_pc_T_2
+         : _idu_io_jump_op == 2'h0 | ~(_ifu_io_alu_pc_T_2 & branch_en)
              ? _ifu_io_pc
-             : branch_en ? _ifu_io_pc + _idu_io_imm : _exu_io_result),
+             : _ifu_io_pc + _idu_io_imm),
     .io_jump_en (jal_en | branch_en),
     .io_pc      (_ifu_io_pc),
     .io_snpc    (_ifu_io_snpc)
@@ -81,10 +92,10 @@ module Core(
   );
   RegFile regfile (
     .clock     (clock),
-    .io_wdata  (_GEN[_idu_io_rf_wdata_sel]),
+    .io_wdata  (_GEN_0[_idu_io_rf_wdata_sel]),
     .io_waddr  (_idu_io_rd[3:0]),
     .io_wen    (_idu_io_rf_wen),
-    .io_raddr1 (_idu_io_rs1[3:0]),
+    .io_raddr1 (_exu_io_val1_T ? 4'h0 : _idu_io_rs1[3:0]),
     .io_raddr2 (_idu_io_rs2[3:0]),
     .io_rdata1 (_regfile_io_rdata1),
     .io_rdata2 (_regfile_io_rdata2)
@@ -104,9 +115,19 @@ module Core(
     .valid     (_idu_io_mem_valid),
     .mem_wen   (_idu_io_mem_wen),
     .mem_waddr (_exu_io_result),
-    .mem_wdata (_regfile_io_rdata2),
+    .mem_wdata
+      (_mem_io_mem_wmask_T
+         ? _regfile_io_rdata2
+         : _mem_io_mem_wmask_T_1
+             ? {16'h0, _regfile_io_rdata2[15:0]}
+             : _mem_io_mem_wmask_T_3 ? {24'h0, _regfile_io_rdata2[7:0]} : 32'h0),
     .mem_rdata (_mem_mem_rdata),
-    .mem_raddr (_exu_io_result)
+    .mem_raddr (_exu_io_result),
+    .mem_wmask
+      ({4'h0,
+        _mem_io_mem_wmask_T
+          ? 4'hF
+          : {2'h0, _mem_io_mem_wmask_T_1 ? 2'h3 : {1'h0, _mem_io_mem_wmask_T_3}}})
   );
   assign io_instr = _instr_fetch_instr;
   assign io_pc = _ifu_io_pc;
