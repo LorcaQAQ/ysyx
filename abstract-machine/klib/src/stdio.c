@@ -8,7 +8,16 @@
 char* int2string(int num,char *str);
 
 int printf(const char *fmt, ...) {
-  panic("Not implemented");
+  va_list ap;
+  va_start(ap,fmt);
+  char start[100]={};
+  char *out=start;
+  int n=sprintf(out,fmt,ap);
+  for(int i=0;i<n;i++){
+    putch(start[i]);
+  }
+  va_end(ap);
+  return n;
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {

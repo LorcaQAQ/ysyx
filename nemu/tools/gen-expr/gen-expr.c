@@ -50,10 +50,10 @@ static void gen_rand_expr() {
 		}
 		  switch (branch) {
 				  case 0: gen_num(); break;
-					case 1: expr_len+=3;gen('('); gen_rand_expr(); gen(')'); break;
-					case 2: expr_len+=2;gen_space();gen_rand_expr();break;
-					case 3: expr_len+=2; gen_rand_logic_not();gen_rand_expr();break;
-					default: expr_len+=3;gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+					case 1: expr_len+=4;gen('('); gen_rand_expr(); gen(')'); break;
+					case 2: expr_len+=3;gen_space();gen_rand_expr();break;
+					case 3: expr_len+=3; gen_rand_logic_not();gen_rand_expr();break;
+					default: expr_len+=4;gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
 					
 			}
 }
@@ -68,8 +68,8 @@ static void gen_rand_logic_expr() {
 	}
 	switch (branch) {
 	case 0: gen_num(); break;
-	case 1: expr_len += 4; gen_rand_expr(); gen_rand_logic_op(); gen_rand_expr(); break;
-	default: expr_len += 4; gen_rand_logic_expr(); gen_rand_and_or_op(); gen_rand_logic_expr(); break;
+	case 1: expr_len += 6; gen_rand_expr(); gen_rand_logic_op(); gen_rand_expr(); break;
+	default: expr_len += 6; gen_rand_logic_expr(); gen_rand_and_or_op(); gen_rand_logic_expr(); break;
 	}
 }
 
@@ -102,7 +102,11 @@ int main(int argc, char *argv[]) {
     int result;
     ret = fscanf(fp, "%d", &result);
     pclose(fp);
-
+	for (int j = 0; j < buf_index; j++) {
+		if(buf[j]=='u'){
+			buf[j]=' ';
+		}
+	}
     printf("%u %s\n", result, buf);
   }
   return 0;
@@ -119,8 +123,8 @@ static void gen_num(){
 	}
 	char rand_num_str;
 	rand_num_str=rand_num+'0';
-	buf[buf_index]=rand_num_str;
-	buf_index++;
+	buf[buf_index++]=rand_num_str;
+	buf[buf_index++]='u';
 }
 static void gen_rand_op(){
 	switch(choose(4)){

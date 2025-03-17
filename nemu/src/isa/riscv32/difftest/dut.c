@@ -20,6 +20,11 @@
 //#define FMT_WORD MUXDEF(CONFIG_ISA64, "0x%016" PRIx64, "0x%08" PRIx32)
 #include <cpu/cpu.h>
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
+  if (cpu.pc != pc) {
+    Log("Difftest: %s at pc = " FMT_WORD,
+        ANSI_FMT("ERROR", ANSI_FG_RED), pc);
+    return false;
+  }
   for (int i = 0; i < NR_GPR; i++) {
     if(ref_r->gpr[i]!=cpu.gpr[i]) {
        Log("Difftest: %s at pc = " FMT_WORD,

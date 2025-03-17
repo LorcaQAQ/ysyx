@@ -29,8 +29,9 @@ void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
 
-
+#ifdef CONFIG_ITRACE_COND
 RingBuffer *buffer=NULL;
+#endif
 int func_cnt=0;
 
 ELF_FUNC func_pool[FUNC_NUM]={};
@@ -139,7 +140,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Load the elf file. */
   int elf_size=load_elf(elf_file); 
   if(elf_size!=0){
-    printf("elf is not read successively!");
+    printf("elf is not read successively!\n");
   }
 
   /* Load the image to memory. This will overwrite the built-in image. */
@@ -152,7 +153,9 @@ void init_monitor(int argc, char *argv[]) {
   init_sdb();
 
   /* Initialize the ring buffer*/
+  #ifdef CONFIG_ITRACE_COND
   buffer=init_RingBuffer();
+  #endif
 
 #ifndef CONFIG_ISA_loongarch32r
   IFDEF(CONFIG_ITRACE, init_disasm(

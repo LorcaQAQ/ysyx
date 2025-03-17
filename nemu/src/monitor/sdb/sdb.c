@@ -106,7 +106,7 @@ static int cmd_p(char* args) {
 			bool success=true;
 			word_t value=expr(args,&success);
 			if(success)
-				printf("The vaule of expression \"%s\" is:%u\n",args,value);
+				printf("The vaule of expression \"%s\" is:%d\n",args,value);
 			else
 				printf("The expression cannot be identified!\n");
     }

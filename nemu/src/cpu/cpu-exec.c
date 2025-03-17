@@ -34,7 +34,9 @@ static bool g_print_step = false;
 
 
 void device_update();
-int write_RingBuffer(RingBuffer *buffer,char *data);
+#ifdef CONFIG_ITRACE_COND 
+int write_RingBuffer(RingBuffer *buffer,char *data); 
+#endif
 void print_space(int n);
 int display_ftrace(Decode s, int n);
 
@@ -102,7 +104,9 @@ static void execute(uint64_t n) {
     for (; n > 0; n--) {
         exec_once(&s, cpu.pc);
         g_nr_guest_inst++;
-        write_RingBuffer(buffer,s.logbuf);
+        #ifdef CONFIG_ITRACE_COND
+            write_RingBuffer(buffer,s.logbuf);
+        #endif
         trace_and_difftest(&s, cpu.pc);
         #ifdef CONFIG_FTRACE
             fun_hierachy=display_ftrace(s, fun_hierachy);
@@ -155,6 +159,7 @@ void cpu_exec(uint64_t n) {
         // fall through
     case NEMU_QUIT: statistic();
     //iringbuf
+    #ifdef CONFIG_ITRACE_COND
     if(nemu_state.halt_ret != 0){
         for(int i=0;i<buffer->bufferlength;i++){
         if (i== buffer->write_index-1) {
@@ -166,6 +171,7 @@ void cpu_exec(uint64_t n) {
         }
     }
     free(buffer);
+    #endif
     
     }
 }

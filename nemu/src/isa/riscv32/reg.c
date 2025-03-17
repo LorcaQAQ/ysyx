@@ -27,7 +27,8 @@ void isa_reg_display() {
 	int count=sizeof(regs)/sizeof(regs[0]);
 	printf("---Print all the register---\n");
 	for(int i=0;i<count;i++){
-		printf("$%s=%u\n",regs[i],cpu.gpr[i]);
+		printf("$%s=0x%08x\t",regs[i],cpu.gpr[i]);
+		if((i+1)%4==0){ printf("\n"); }
 	}
 }
 

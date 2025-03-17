@@ -276,7 +276,7 @@ static int position_main_operator(int p, int q) {
 
 
 
-static int eval(int p, int q) {
+static word_t eval(int p, int q) {
 	if (p > q) {
 		printf("Bad expression at p:%d and q:%d\n", p, q);//
 		assert(0);												//
@@ -287,7 +287,7 @@ static int eval(int p, int q) {
 		 *      * For now this token should be a number.
 		 *           * Return the value of the number.
 		 *                */
-		int num;
+		uint32_t num;
 		switch (tokens[q].type) {
 		case TK_NUM:
 			sscanf(tokens[q].str, "%d", &num);
@@ -315,8 +315,8 @@ static int eval(int p, int q) {
 
 	}
 	else {
-		int val1 = 1;
-		int val2 = 1;
+		word_t val1 = 1;
+		word_t val2 = 1;
 		int op_position;
 		op_position = position_main_operator(p, q);
 		if (op_position == q) {
@@ -335,7 +335,7 @@ static int eval(int p, int q) {
 		switch (tokens[op_position].type) {
 		case '+': return val1 + val2;
 		case '-': return val1 - val2;
-		case '*': return (int)(val1 * val2);
+		case '*': return val1 * val2;
 		case '/':
 			if (val2 != 0)
 				return val1 / val2;
@@ -376,7 +376,7 @@ word_t expr(char* e, bool* success) {
 			tokens[i].type = DEREF;
 		}
 	}
-	int result;
+	word_t result;
 	result = eval(0, nr_token);
-	return (word_t)result;
+	return result;
 }
