@@ -12,7 +12,7 @@ int printf(const char *fmt, ...) {
   va_start(ap,fmt);
   char start[100]={};
   char *out=start;
-  int n=sprintf(out,fmt,ap);
+  int n=vsprintf(out,fmt,ap);
   for(int i=0;i<n;i++){
     putch(start[i]);
   }
@@ -21,12 +21,6 @@ int printf(const char *fmt, ...) {
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
-  panic("Not implemented");
-}
-
-int sprintf(char *out, const char *fmt, ...) {
-  va_list ap;
-  va_start(ap,fmt);
   char *start=out;
   int num;
   while(*fmt){
@@ -39,7 +33,7 @@ int sprintf(char *out, const char *fmt, ...) {
                 out=int2string(num,out);
                 fmt++;
                 break;
-              case 's': /*string*/
+                case 's': /*string*/
                 char *s=va_arg(ap,char *);
                 while(*s){
                   *out++=*s++;
@@ -57,6 +51,14 @@ int sprintf(char *out, const char *fmt, ...) {
   va_end(ap);
   *out='\0';
   return out-start;
+}
+
+int sprintf(char *out, const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsprintf(out, fmt, ap);
+  va_end(ap);
+  return n;
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
