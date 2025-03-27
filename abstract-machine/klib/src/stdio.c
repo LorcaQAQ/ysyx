@@ -27,10 +27,42 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
     switch(*fmt){
       case '%': /*conversion specification*/
               fmt++;
+              int zero_padding=0;
+              while(*fmt=='0'){
+                zero_padding=1;
+                fmt++;
+              }
+              int width=0;
+              while(*fmt>='0'&&*fmt<='9'){
+                width=width*10+(*fmt-'0');
+                fmt++;
+              }
               switch(*fmt){
                 case 'd':  /*integer*/
                 num=va_arg(ap,int);
-                out=int2string(num,out);
+
+                //get the number of digits of the integer
+                char buffer[100]={};
+                char *p=buffer;
+                int2string(num,buffer);
+                int padding=width-strlen(p);
+                if(padding<0) padding=0;
+                if(zero_padding==1){
+                  if(num<0){
+                    *out++='-';
+                    p++;
+                    padding=padding-1;
+                    if (padding < 0) padding = 0;
+                  }
+                  while(padding--) *out++='0';
+                }else{
+                  while(padding--) *out++=' ';
+                  if (num<0) *out++ = '-';
+                }
+                while(*p){
+                  *out++=*p++;
+                }
+                //free(buffer);
                 fmt++;
                 break;
                 case 's': /*string*/

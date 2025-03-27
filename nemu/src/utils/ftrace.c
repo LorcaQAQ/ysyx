@@ -8,7 +8,7 @@ int load_elf(char *elf_file){
     FILE *fp=fopen(elf_file,"r");
     if (elf_file == NULL) {
     Log("No elf is given.");
-    return 4096; // built-in image size
+    return 0; // built-in image size
   }
   Assert(fp, "Can not open '%s'", elf_file);
   fseek(fp, 0, SEEK_SET);
@@ -110,7 +110,6 @@ int load_elf(char *elf_file){
   uint32_t sym_num=shdr[sym_index].sh_size / shdr[sym_index].sh_entsize;
 
   a=fread(esym,shdr[sym_index].sh_size,1,fp);
-
   for(int i=0;i<sym_num;i++)
   {
       temp=strtab;
@@ -119,13 +118,31 @@ int load_elf(char *elf_file){
       if(ELF32_ST_TYPE(esym[i].st_info)==STT_FUNC)
       {
         //printf("函数名:%s\t",temp);
-        strcpy(func_pool[func_cnt].name,temp);
+        //strcpy(func_pool[func_cnt].name,temp);
         //printf("地址%x\t",esym[i].st_value);
-        func_pool[func_cnt].addr=esym[i].st_value;
+        //func_pool[func_cnt].addr=esym[i].st_value;
         //printf("+%x\n",esym[i].st_size);
-        func_pool[func_cnt].offset=esym[i].st_size;
+        //func_pool[func_cnt].offset=esym[i].st_size;
         func_cnt+=1;
       }  
   }
-return 0;
+  func_pool=(ELF_FUNC *)malloc(sizeof(ELF_FUNC)*func_cnt);
+
+  for(int i=0;i<sym_num;i++)
+  {
+      temp=strtab;
+      temp=strtab+esym[i].st_name;
+      int j=0; 
+      if(ELF32_ST_TYPE(esym[i].st_info)==STT_FUNC)
+      {
+        //printf("函数名:%s\t",temp);
+        func_pool[j].name = strdup(temp);
+        //printf("地址%x\t",esym[i].st_value);
+        func_pool[j].addr=esym[i].st_value;
+        //printf("+%x\n",esym[i].st_size);
+        func_pool[j].offset=esym[i].st_size;
+        j+=1;
+      }  
+  }
+return 1;
 }

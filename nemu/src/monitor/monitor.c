@@ -34,7 +34,7 @@ RingBuffer *buffer=NULL;
 #endif
 int func_cnt=0;
 
-ELF_FUNC func_pool[FUNC_NUM]={};
+ELF_FUNC *func_pool=NULL;
 
 
 static void welcome() {
@@ -138,10 +138,12 @@ void init_monitor(int argc, char *argv[]) {
   init_isa();
 
   /* Load the elf file. */
+  #ifdef CONFIG_FTRACE
   int elf_size=load_elf(elf_file); 
-  if(elf_size!=0){
+  if(elf_size==0){
     printf("elf is not read successively!\n");
   }
+  #endif
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
