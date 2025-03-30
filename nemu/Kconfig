@@ -161,6 +161,11 @@ config ITRACE_COND
   bool "Enable function trace"
   default y
 
+config DTRACE
+  depends on ITRACE&&DEVICE
+  bool "Enable device drace"
+  default y
+
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF

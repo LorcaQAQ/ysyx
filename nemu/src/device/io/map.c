@@ -54,7 +54,9 @@ void init_map() {
 
 word_t map_read(paddr_t addr, int len, IOMap *map) {
   assert(len >= 1 && len <= 8);
+  IFDEF(CONFIG_DTRACE,display_mmio_read(addr,map));
   check_bound(map, addr);
+  
   paddr_t offset = addr - map->low;
   invoke_callback(map->callback, offset, len, false); // prepare data to read
   word_t ret = host_read(map->space + offset, len);
@@ -64,7 +66,16 @@ word_t map_read(paddr_t addr, int len, IOMap *map) {
 void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
+  IFDEF(CONFIG_DTRACE,display_mmio_write(addr,data,map));
   paddr_t offset = addr - map->low;
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
+}
+
+void display_mmio_read(paddr_t addr,IOMap *map){
+  printf("Device: %s is read at  PC=" FMT_WORD ". The device address is: "FMT_PADDR" \n",map->name,cpu.pc,addr);
+}
+
+void display_mmio_write(paddr_t addr, word_t data,IOMap *map){
+  printf("Device: %s is written at  PC=" FMT_WORD ".Data= "FMT_WORD"The device address is: "FMT_PADDR" \n",map->name,cpu.pc,data,addr);
 }
