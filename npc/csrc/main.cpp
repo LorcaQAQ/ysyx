@@ -10,8 +10,8 @@
 
 #include <utils.h>
 #include <memory/paddr.h>
-#include "monitor/monitor.h"
-#include "monitor/sdb/sdb.h"
+#include <monitor.h>
+#include <sdb.h>
 #include <generated/autoconf.h>
 #include <cpu/decode.h>
 #include <macro.h>
@@ -19,15 +19,13 @@
 #include <tools/ringbuf.h>
 #include <tools/elf_read.h>
 #include <isa.h>
-
+#include <cpu/cpu.h>
 #define MAX_INST_TO_PRINT 10
 #define NR_GPR MUXDEF(CONFIG_RVE, 16, 32)
 #define CLK_PERIOD 10    // 时钟周期（单位：ns）
 
 static void single_cycle(VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave);
 static void reset(int n, VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave);
-extern "C" void stop_simulation();
-extern "C" void npc_exec(uint32_t n);
 extern void isa_reg_display();
 extern void difftest_step(vaddr_t pc, vaddr_t npc);
 
@@ -47,10 +45,9 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
-void init_monitor(int argc, char *argv[]);
+// void init_monitor(int argc, char *argv[]);
 int display_ftrace(Decode s, int n);
 void print_space(int n);
-void cpu_reg_update();
 vluint64_t main_time = 0;
 
 int is_exit_status_bad(); 

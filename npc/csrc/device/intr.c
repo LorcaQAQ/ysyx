@@ -13,19 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __CPU_CPU_H__
-#define __CPU_CPU_H__
+#include <isa.h>
 
-#include <common.h>
-
-void cpu_exec(uint64_t n);
-void stop_simulation();
-void npc_exec(uint32_t n);
-void cpu_reg_update();
-void set_npc_state(int state, vaddr_t pc, int halt_ret);
-void invalid_inst(vaddr_t thispc);
-
-#define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
-#define INV(thispc) invalid_inst(thispc)
-
-#endif
+void dev_raise_intr() {
+}

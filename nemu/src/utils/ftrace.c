@@ -117,12 +117,6 @@ int load_elf(char *elf_file){
         
       if(ELF32_ST_TYPE(esym[i].st_info)==STT_FUNC)
       {
-        //printf("函数名:%s\t",temp);
-        //strcpy(func_pool[func_cnt].name,temp);
-        //printf("地址%x\t",esym[i].st_value);
-        //func_pool[func_cnt].addr=esym[i].st_value;
-        //printf("+%x\n",esym[i].st_size);
-        //func_pool[func_cnt].offset=esym[i].st_size;
         func_cnt+=1;
       }  
   }

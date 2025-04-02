@@ -1,14 +1,13 @@
 #include <getopt.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <utils.h>
 #include <common.h>
 #include <memory/paddr.h>
 #include <tools/disasm.h>
-#include "../monitor/sdb/sdb.h"
+#include <sdb.h>
 #include <tools/ringbuf.h>
 #include <tools/elf_read.h>
 #include <assert.h>
+#include <monitor.h>
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
@@ -16,19 +15,12 @@ static char *img_file = NULL;
 static char *elf_file=NULL;
 static int difftest_port = 1234;
 
-extern void init_rand();
-extern void init_log(const char *log_file);
-extern void init_mem();
-extern void init_sdb();
-extern void init_isa();
-extern void init_disasm(const char *triple);
-extern int load_elf(char *elf_file);
-extern void init_difftest(char *ref_so_file, long img_size, int port);
+void init_difftest(char *ref_so_file, long img_size, int port);
 
 RingBuffer *buffer = NULL;
 int func_cnt = 0;
 
-ELF_FUNC func_pool[FUNC_NUM] = {};
+ELF_FUNC *func_pool=NULL;
 
 int parse_args(int argc, char *argv[])
 {
@@ -115,11 +107,12 @@ void init_monitor(int argc, char *argv[])
   init_isa();
 
   /* Load the elf file. */
-  int elf_size = load_elf(elf_file);
-  if (elf_size != 0)
-  {
+  #ifdef CONFIG_FTRACE
+  int elf_size=load_elf(elf_file); 
+  if(elf_size==0){
     printf("elf is not read successively!\n");
   }
+  #endif
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();

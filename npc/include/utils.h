@@ -18,6 +18,10 @@
 
 #include <common.h>
 
+
+
+void init_rand();
+void init_log(const char *log_file);
 // ----------- state -----------
 
 enum { NPC_RUNNING, NPC_STOP, NPC_END, NPC_ABORT, NPC_QUIT };

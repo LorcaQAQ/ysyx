@@ -14,7 +14,8 @@
 
 
 
-void init_pmem();
+void init_isa();
+void init_mem();
 extern "C" int pmem_read(int addr);
 uint8_t* guest_to_host(uint32_t paddr) ;
 uint32_t paddr_read(uint32_t addr, int len);
@@ -22,4 +23,6 @@ uint32_t paddr_read(uint32_t addr, int len);
 static inline bool in_pmem(uint32_t addr) {
     return addr - CONFIG_MBASE < CONFIG_MSIZE;
   }
+
+
 #endif

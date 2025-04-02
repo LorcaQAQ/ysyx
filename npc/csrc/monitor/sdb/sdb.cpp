@@ -16,30 +16,16 @@
 
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "sdb.h"
+#include <sdb.h>
 #include <memory/paddr.h>
-#include "../../reg.h"
+#include <reg.h>
 #include <stdlib.h>
-
+#include <cpu/cpu.h>
 static int is_batch_mode = false;
 
-void init_regex();
-void init_wp_pool();
-static int cmd_help(char *args);
-void display_watchpoint();
-void create_watchpoint(char* args);
-void delete_watchpoint(int no);
+
 static int wp_num = 0;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void npc_exec(uint32_t n);
-void stop_simulation();
-#ifdef __cplusplus
-}
-#endif
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
   static char *line_read = NULL;

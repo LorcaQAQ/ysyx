@@ -13,19 +13,41 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __CPU_CPU_H__
-#define __CPU_CPU_H__
+#ifndef __SDB_H__
+#define __SDB_H__
 
-#include <common.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <stdbool.h>
+uint32_t expr(char *e, bool *success);
 
-void cpu_exec(uint64_t n);
-void stop_simulation();
-void npc_exec(uint32_t n);
-void cpu_reg_update();
-void set_npc_state(int state, vaddr_t pc, int halt_ret);
-void invalid_inst(vaddr_t thispc);
+#define NR_WP 32
+#define ARRLEN(arr) (int)(sizeof(arr) / sizeof(arr[0]))
+void sdb_set_batch_mode();
 
-#define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
-#define INV(thispc) invalid_inst(thispc)
+void sdb_mainloop() ;
+void init_sdb();
+
+typedef struct watchpoint {
+	int NO;
+	struct watchpoint* next;
+	char expr[66532];
+	uint32_t old_value;
+	uint32_t new_value;
+
+} WP;
+WP *new_wp();
+void free_wp(WP* wp);
+extern WP *head;
+
+
+void init_regex();
+void init_wp_pool();
+static int cmd_help(char *args);
+void display_watchpoint();
+void create_watchpoint(char* args);
+void delete_watchpoint(int no);
 
 #endif
