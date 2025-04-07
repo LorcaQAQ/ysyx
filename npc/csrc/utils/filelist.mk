@@ -14,7 +14,9 @@
 #**************************************************************************************/
 
 ifneq ($(CONFIG_ITRACE)$(CONFIG_IQUEUE),)
-CXXSRC = csrc/utils/disasm.cc
+SIM_SRCS += $(abspath csrc/utils/disasm.cc)
 CXXFLAGS += $(shell llvm-config --cxxflags) -fPIE
 LIBS += $(shell llvm-config --libs)
+else
+SRCS-BLACKLIST-y += $(abspath csrc/utils/disasm.cc)
 endif

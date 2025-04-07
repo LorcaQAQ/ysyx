@@ -1,6 +1,5 @@
 #include <memory/paddr.h>
 #include <stdio.h>
-//#include "../utils.h"
 #include <utils.h>
 #include <common.h>
 #include <VCore.h>
@@ -42,32 +41,65 @@ void init_isa(){
 
 
 extern "C" int pmem_read(int addr) {
-  //IFDEF(CONFIG_MTRACE,display_mem_read(addr));
-  uint32_t ret = *(uint32_t *)guest_to_host((uint32_t )addr);
-  return ret;
+  if (in_pmem(addr)) {
+    IFDEF(CONFIG_MTRACE,display_mem_read(addr));
+    uint32_t ret = *(uint32_t *)guest_to_host((uint32_t )addr);
+    return ret;
+  }
+  #ifdef CONFIG_DEVICE
+    if(addr==CONFIG_RTC_MMIO){//timer
+      uint64_t us = get_time();
+      uint32_t low=  (uint32_t)us;
+      // printf("low = %x\n", low);
+      return low;
+    }else if(addr==CONFIG_RTC_MMIO+4){
+      uint64_t us = get_time();
+      uint32_t high=  (uint32_t)(us>>32);
+      // printf("high = %x\n", high);
+      return high;
+    }else if (addr==CONFIG_SERIAL_MMIO) {
+      return 0;
+    }
+  #endif
+  out_of_bound(addr);
+  return 0;
 }
 
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
   // 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-  
   //uint32_t aligned_waddr = waddr & ~0x3u;//对齐写入会引起错误
-  uint32_t new_data = *(uint32_t *)guest_to_host(waddr);
-  uint8_t mask = (uint8_t)wmask;
-  for(int i = 0; i < 4; i++) {
-    if(mask & (1 << i)) {
-      uint8_t byte_to_write = (wdata >> (i * 8)) & 0xFF;
-      new_data = (new_data & ~(0xFF << (i * 8))) | (byte_to_write << (i * 8));
+
+  
+
+  if(in_pmem(waddr)){
+    uint32_t new_data = *(uint32_t *)guest_to_host(waddr);
+    uint8_t mask = (uint8_t)wmask;
+    for(int i = 0; i < 4; i++) {
+      if(mask & (1 << i)) {
+        uint8_t byte_to_write = (wdata >> (i * 8)) & 0xFF;
+        new_data = (new_data & ~(0xFF << (i * 8))) | (byte_to_write << (i * 8));
+      }
     }
+    IFDEF(CONFIG_MTRACE,display_mem_write(waddr,new_data));
+    *(uint32_t *)guest_to_host((uint32_t)waddr)= new_data;
+    return;
+  } 
+  #ifdef CONFIG_DEVICE
+  if(waddr==CONFIG_SERIAL_MMIO){//timer
+    uint8_t ch= wdata & 0xff;
+    putc(ch, stderr);
+    return;
   }
-  IFDEF(CONFIG_MTRACE,display_mem_write(waddr,new_data));
-  *(uint32_t *)guest_to_host((uint32_t)waddr)= new_data;
-  return;
+  #endif
+  out_of_bound(waddr);
 }
+
 uint32_t paddr_read(uint32_t addr, int len) {
-  if (in_pmem(addr)) return pmem_read(addr);
-  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+  if (in_pmem(addr)) {
+    return pmem_read(addr);
+  }
   out_of_bound(addr);
   return 0;
 }
@@ -76,13 +108,13 @@ void init_mem() {
     pmem = malloc(CONFIG_MSIZE);
     assert(pmem);
   #endif
-    IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
-    Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
-  }
-  void display_mem_read(paddr_t addr){
-    printf("Memory read at " FMT_PADDR ", PC=" FMT_WORD"\n", addr, cpu.pc);
-  }
+  IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
+  Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
+}
+void display_mem_read(paddr_t addr){
+  printf("Memory read at " FMT_PADDR ", PC=" FMT_WORD"\n", addr, cpu.pc);
+}
   
-  void display_mem_write(paddr_t addr, word_t data){
-    printf("Memory write at " FMT_PADDR ", PC=" FMT_WORD", DATA is " FMT_WORD"\n", addr, cpu.pc,data);
-  }
+void display_mem_write(paddr_t addr, word_t data){
+  printf("Memory write at " FMT_PADDR ", PC=" FMT_WORD", DATA is " FMT_WORD"\n", addr, cpu.pc,data);
+}

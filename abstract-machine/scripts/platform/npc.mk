@@ -16,7 +16,7 @@ CFLAGS += -DMAINARGS=\"$(mainargs)\"
 
 NPCFLAGS += -b -l $(shell dirname $(IMAGE).elf)/npc-log.txt
 NPCFLAGS += -f  $(IMAGE).elf
-
+CFLAGS += -I$(AM_HOME)/am/src/riscv/npc/include
 .PHONY: $(AM_HOME)/am/src/riscv/npc/trm.c
 
 image: $(IMAGE).elf

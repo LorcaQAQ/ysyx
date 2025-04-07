@@ -1,3 +1,4 @@
+
 #ifndef __RINGBUF_H_
 #define __RINGBUF_H_
 
@@ -14,7 +15,10 @@ typedef struct {
 } RingBuffer;
 
 RingBuffer *init_RingBuffer();
+
 int write_RingBuffer(RingBuffer *buffer,char *data);
 
+
 extern RingBuffer *buffer;
+
 #endif

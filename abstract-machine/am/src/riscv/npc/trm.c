@@ -1,5 +1,7 @@
 #include <am.h>
 #include <klib-macros.h>
+#include <npc.h>
+#define CONFIG_SERIAL_MMIO 0xa00003f8
 
 extern char _heap_start;
 int main(const char *args);
@@ -18,6 +20,8 @@ static const char mainargs[] = MAINARGS;
 
 
 void putch(char ch) {
+  // *(volatile uint8_t  *)SERIAL_PORT = ch;
+  outb(SERIAL_PORT, ch);
 }
 
 void halt(int code) {

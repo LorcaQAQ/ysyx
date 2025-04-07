@@ -16,6 +16,8 @@ TOP_PACKAGE= core
 TOP_OJCET= coretop
 TOP_MAIN =CoreMain
 
+NOWAVE ?=
+
 
 $(shell mkdir -p $(BUILD_DIR))
 
@@ -73,27 +75,17 @@ CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-Og -ggdb3,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
-CFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) 
 CXXFLAGS += $(CFLAGS)
 
+ifndef NOWAVE
+	VERILATOR_CFLAGS += --trace
+	CFLAGS += -DWAVE_DUMP=true
+endif
 
 
 ifeq ($(MAKECMDGOALS), run_nvboard)
   DEPS += $(NVBOARD_ARCHIVE)
   SIM_SRCS += $(SRC_AUTO_BIND)
-endif
-
-#to perform simulation, we need to  add "--trace"
-ifeq ($(MAKECMDGOALS), sim )
-  VERILATOR_CFLAGS +=--trace
-endif
-
-ifeq ($(MAKECMDGOALS), run) 
-  VERILATOR_CFLAGS +=--trace
-endif
-
-ifeq ($(MAKECMDGOALS), gdb) 
-  VERILATOR_CFLAGS +=--trace
 endif
 
 #ITRACE FILES
@@ -102,7 +94,6 @@ override ARGS += $(ARGS_DIFF)
 
 # Link llvm LIBS for ITRACE 
 LDFLAGS += $(LIBS)
-$(info LDFLAGS=$(LDFLAGS))
 
 $(BIN): $(DEPS)
 	@rm -rf $(OBJ_DIR)
@@ -110,6 +101,7 @@ $(BIN): $(DEPS)
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+
 
 NPC_EXEC := $(BIN) $(ARGS) $(IMG)
 
@@ -119,11 +111,11 @@ run_nvboard: $(BIN)
 	@echo "Run on nvboard."
 	@echo "Write this Makefile by your self."
 
-sim: $(BIN)
-	@$^
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@echo "Simulation in verilator."
-	@echo "Write this Makefile by your self."
+#sim: $(BIN)
+##	@$^
+#	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+#	@echo "Simulation in verilator."
+#	@echo "Write this Makefile by your self."
 
 run: $(BIN)
 	$(NPC_EXEC)

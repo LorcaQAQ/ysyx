@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 #include <tools/ringbuf.h>
 RingBuffer *init_RingBuffer(){
     RingBuffer *buffer= (RingBuffer *)calloc(1,sizeof(RingBuffer));
@@ -18,6 +19,7 @@ int write_RingBuffer(RingBuffer *buffer,char *data){
     return buffer->bufferlength;
 
 }
+
 
 
 

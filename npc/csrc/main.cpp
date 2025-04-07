@@ -23,9 +23,13 @@
 #define MAX_INST_TO_PRINT 10
 #define NR_GPR MUXDEF(CONFIG_RVE, 16, 32)
 #define CLK_PERIOD 10    // 时钟周期（单位：ns）
-
-static void single_cycle(VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave);
-static void reset(int n, VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave);
+#ifdef WAVE_DUMP
+static void single_cycle(VCore *top, VerilatedContext *contextp  ,VerilatedVcdC *wave);
+static void reset(int n, VCore *top, VerilatedContext *contextp ,VerilatedVcdC *wave);
+#else
+static void single_cycle(VCore *top, VerilatedContext *contextp );
+static void reset(int n, VCore *top, VerilatedContext *contextp);
+#endif
 extern void isa_reg_display();
 extern void difftest_step(vaddr_t pc, vaddr_t npc);
 
@@ -35,7 +39,10 @@ extern svBitVecVal get_instr();
 // global variables
 VerilatedContext *contextp = new VerilatedContext;
 VCore *top = NULL;
+
+#ifdef WAVE_DUMP
 VerilatedVcdC *wave = NULL;
+#endif
 
 // #define CONFIG_WATCHPOINT 1
 NPCState npc_state = {.state = NPC_STOP};
@@ -59,58 +66,86 @@ int main(int argc, char **argv)
   VerilatedContext *contextp = new VerilatedContext;
   contextp->commandArgs(argc, argv);
   top = new VCore{contextp};
+  #ifdef WAVE_DUMP
   wave = new VerilatedVcdC; // wave
   // wave configuration
   contextp->traceEverOn(true);
   top->trace(wave, 99);
   wave->open("build/top.vcd");
+  #endif
 
+  #ifdef WAVE_DUMP
   reset(3, top, contextp, wave);
-
+  #else
+  reset(3, top, contextp);
+  #endif
   long img_size = load_img();
   assert(img_size != 0);
   sdb_mainloop();
-  free(buffer);
+
+  #ifdef CONFIG_ITRACE_COND 
+    free(buffer);
+  #endif
+
+  #ifdef WAVE_DUMP
   wave->close();
+  #endif
   delete top;
   delete contextp;
   return is_exit_status_bad();
 }
 
-static void single_cycle(VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave)
+#ifdef WAVE_DUMP
+static void single_cycle(VCore *top, VerilatedContext *contextp  ,VerilatedVcdC *wave)
+#else
+static void single_cycle(VCore *top, VerilatedContext *contextp)
+#endif
 {
   top->clock = 1;
   top->eval();
-  //wave->dump(contextp->time()); // simulation time
-  //contextp->timeInc(1);
-  wave->dump(main_time); // simulation time
+  #ifdef WAVE_DUMP
+    wave->dump(main_time); // simulation time
+  #endif
   main_time += CLK_PERIOD / 2;
   top->clock = 0;
   top->eval();
-  //wave->dump(contextp->time()); // simulation time
-  //contextp->timeInc(1);
+  #ifdef WAVE_DUMP
   wave->dump(main_time); // simulation time
+  #endif
   main_time += CLK_PERIOD / 2;
 }
 
-static void reset(int n, VCore *top, VerilatedContext *contextp, VerilatedVcdC *wave)
+
+#ifdef WAVE_DUMP
+static void reset(int n, VCore *top, VerilatedContext *contextp ,VerilatedVcdC *wave)
+#else
+static void reset(int n, VCore *top, VerilatedContext *contextp)
+#endif
 {
   top->reset = 1;
   n--;
   while (n-- > 0)
   {
+    #ifdef WAVE_DUMP
     single_cycle(top, contextp, wave);
+    #else
+    single_cycle(top, contextp);
+    #endif
   }
 
   //add another cycle to make sure the reset is effective
   top->clock = 1;
   top->eval();
+  #ifdef WAVE_DUMP
   wave->dump(main_time); // simulation time
+  #endif
   main_time += CLK_PERIOD / 2;
   top->clock = 0;
   top->reset = 0;
   top->eval();
+  #ifdef WAVE_DUMP
   wave->dump(main_time); // simulation time
+  #endif
   main_time += CLK_PERIOD / 2;
 }
 
@@ -169,7 +204,11 @@ static void exec_once(Decode *s)
   s->pc = top->io_pc;
   s->snpc = top->io_pc + 4;
   //top->io_instr = pmem_read((uint32_t)top->io_pc);
+  #ifdef WAVE_DUMP
   single_cycle(top, contextp, wave);
+  #else
+  single_cycle(top, contextp);
+  #endif
   cpu_reg_update();
   s->dnpc = top->io_pc;
 #ifdef CONFIG_ITRACE
@@ -210,12 +249,14 @@ void execute(uint32_t n)
   {
     exec_once(&s);
     g_nr_guest_inst++;
+    #ifdef CONFIG_ITRACE_COND 
     write_RingBuffer(buffer, s.logbuf);
+    #endif
     trace_and_difftest(&s, top->io_pc);
 #ifdef CONFIG_FTRACE
     fun_hierachy = display_ftrace(s, fun_hierachy);
 #endif
-    IFDEF(CONFIG_DEVICE, device_update());
+    // IFDEF(CONFIG_DEVICE, device_update());
     if (npc_state.state != NPC_RUNNING) break;
     const svScope scope = svGetScopeFromName("TOP.Core.get_instruction");
     assert(scope); // Check for nullptr if scope not found
@@ -261,6 +302,7 @@ void npc_exec(uint32_t n)
     break;
   }
   // iringbuf
+  #ifdef CONFIG_ITRACE_COND
   if (npc_state.halt_ret != 0)
   {
     for (int i = 0; i < buffer->bufferlength; i++)
@@ -275,7 +317,7 @@ void npc_exec(uint32_t n)
       }
     }
   }
-  
+  #endif
 }
 
 static void statistic()

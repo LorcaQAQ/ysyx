@@ -1,6 +1,5 @@
 #include <getopt.h>
 #include <utils.h>
-#include <common.h>
 #include <memory/paddr.h>
 #include <tools/disasm.h>
 #include <sdb.h>
@@ -8,6 +7,7 @@
 #include <tools/elf_read.h>
 #include <assert.h>
 #include <monitor.h>
+// #include <device/deivce.h>
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
@@ -16,8 +16,9 @@ static char *elf_file=NULL;
 static int difftest_port = 1234;
 
 void init_difftest(char *ref_so_file, long img_size, int port);
-
+#ifdef CONFIG_ITRACE_COND
 RingBuffer *buffer = NULL;
+#endif
 int func_cnt = 0;
 
 ELF_FUNC *func_pool=NULL;
@@ -100,7 +101,7 @@ void init_monitor(int argc, char *argv[])
   /* Initialize memory. */
   init_mem();
 
-  /* Initialize devices. */
+  // /* Initialize devices. */
   // IFDEF(CONFIG_DEVICE, init_device());
 
   /* Perform ISA dependent initialization. */
@@ -124,8 +125,9 @@ void init_monitor(int argc, char *argv[])
   init_sdb();
 
   /* Initialize the ring buffer*/
+  #ifdef CONFIG_ITRACE_COND
   buffer = init_RingBuffer();
-
+  #endif
 #ifndef CONFIG_ISA_loongarch32r
   IFDEF(CONFIG_ITRACE, init_disasm(
                            MUXDEF(CONFIG_ISA_x86, "i686",
