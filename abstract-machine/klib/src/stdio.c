@@ -5,7 +5,11 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-char* int2string(int num,char *str);
+void int2string(int num,char *str);
+int count_digits(int num);
+void uint_to_hex(unsigned int num, char *str, int is_upper);
+void int_format_control(char *src, char **dst, int width, int zero_padding,int num);
+void hex_format_control(char *src, char **dst, int width, int zero_padding,unsigned int num);
 
 int printf(const char *fmt, ...) {
   va_list ap;
@@ -23,6 +27,9 @@ int printf(const char *fmt, ...) {
 int vsprintf(char *out, const char *fmt, va_list ap) {
   char *start=out;
   int num;
+  unsigned int unum;
+  char *buffer=NULL;
+  int digit_width=0;
   while(*fmt){
     switch(*fmt){
       case '%': /*conversion specification*/
@@ -39,32 +46,25 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
               }
               switch(*fmt){
                 case 'd':  /*integer*/
-                num=va_arg(ap,int);
-
-                //get the number of digits of the integer
-                char buffer[100]={};
-                char *p=buffer;
-                int2string(num,buffer);
-                int padding=width-strlen(p);
-                if(padding<0) padding=0;
-                if(zero_padding==1){
-                  if(num<0){
-                    *out++='-';
-                    p++;
-                    padding=padding-1;
-                    if (padding < 0) padding = 0;
-                  }
-                  while(padding--) *out++='0';
-                }else{
-                  while(padding--) *out++=' ';
-                  if (num<0) *out++ = '-';
-                }
-                while(*p){
-                  *out++=*p++;
-                }
-                //free(buffer);
-                fmt++;
-                break;
+                  num=va_arg(ap,int);
+                  digit_width=count_digits(num);
+                  //get the number of digits of the integer
+                  buffer=(char *)malloc(sizeof(char)*digit_width);
+                  int2string(num,buffer);
+                  int_format_control(buffer,&out,width,zero_padding,num);
+                  free(buffer);
+                  fmt++;
+                  break;
+                case 'x':
+                  unum=va_arg(ap,unsigned int);
+                  digit_width=count_digits(unum);
+                  //get the number of digits of the integer
+                  buffer=(char *)malloc(sizeof(char)*digit_width);
+                  uint_to_hex(unum,buffer,1);
+                  hex_format_control(buffer,&out,width,zero_padding,unum);
+                  free(buffer);
+                  fmt++;
+                  break;
                 case 's': /*string*/
                 char *s=va_arg(ap,char *);
                 while(*s){
@@ -101,14 +101,14 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   panic("Not implemented");
 }
 
-char* int2string(int num,char *str){
+void int2string(int num,char *str){
   char *s=str;
   int i=0;
   int dont_need_change_order=0;
   if(num<0){//check whether negative number
     if(num==-2147483648){//special case for INT_MIN
        strcpy(s, "-2147483648");
-       return s+11;
+       s=s+11;
     }else{
       s[i++]='-';
       if(num<=-1&&num>=-9) dont_need_change_order=1;//special case for small negative numbers
@@ -132,6 +132,78 @@ char* int2string(int num,char *str){
     s[j]=s[j]-s[i-1-j];
   }
   s=s+i;
-  return s;
+  //return s;
 }
+
+int count_digits(int num) {
+  if (num == 0) return 1;  // '0' has 1 bit
+  int count = 0;
+  while (num != 0) {
+      num /= 10;  // remove the last digit
+      count++;
+  }
+  return count;
+}
+
+void uint_to_hex(unsigned int num, char *str, int is_upper) {
+  char *s = str;
+  const char *digits = is_upper ? "0123456789ABCDEF" : "0123456789abcdef";
+  int i = 0;
+  
+  do {
+      s[i++] = digits[num % 16];  // 取最低4位
+      num /= 16;
+  } while (num > 0);
+  
+  s[i] = '\0';
+  for(int j=0;j<i/2;j++){/*inverse the order of string which is converted from an integer*/
+    s[j]=s[j]+s[i-1-j];
+    s[i-1-j]=s[j]-s[i-1-j];
+    s[j]=s[j]-s[i-1-j];
+  }
+  s=s+i;
+}
+void int_format_control(char *src, char **dst, int width, int zero_padding,int num){
+  int padding=width-strlen(src);
+  if(padding<0) padding=0;
+  if (zero_padding == 1)
+  {
+    if (num < 0)
+    {
+      *(*dst)++ = '-';
+      src++;
+      padding = padding - 1;
+      if (padding < 0)
+        padding = 0;
+    }
+    while (padding--) *(*dst)++ = '0';
+  }
+  else
+  {
+    while (padding--) *(*dst)++ = ' ';
+    if (num < 0)
+    {
+      *(*dst)++ = '-';
+      src++;
+    }
+  }
+  while (*src)  *(*dst)++ = *src++;
+
+}
+void hex_format_control(char *src, char **dst, int width, int zero_padding,unsigned int num){
+  int padding=width-strlen(src);
+  if(padding<0) padding=0;
+  if (zero_padding == 1)
+  {
+    while (padding--)
+    *(*dst)++ = '0';
+  }
+  else
+  {
+    while (padding--) *(*dst)++ = ' ';
+  }
+  while (*src)  *(*dst)++ = *src++;
+}
+
+
 #endif
