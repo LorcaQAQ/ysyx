@@ -26,6 +26,13 @@ enum {
 	TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_N, TYPE_R,TYPE_B// none
 };
 
+#define MRET \
+	s->dnpc = *CSRs(0x341); \
+	cpu.csr.mstatus &= ~(1<<3);\
+	cpu.csr.mstatus |= (cpu.csr.mstatus & (1<<7)) >> 4;\
+	cpu.csr.mstatus |= 1 << 7;\
+	cpu.csr.mstatus &= ~((1<<11)+(1<<12)); 
+
 #define src1R() do { *src1 = R(rs1); } while (0)
 #define src2R() do { *src2 = R(rs2); } while (0)
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
@@ -58,6 +65,12 @@ word_t  *CSRs(uint16_t imm){
 	}
 }
 
+void etrace(){
+	#ifdef CONFIG_ETRACE
+	printf(ANSI_FMT("[ETRACE]", ANSI_FG_MAGENTA) "Exception happens at pc = " FMT_WORD ", Cause value = %d, Status= 0x%08x\n",  cpu.csr.mepc, cpu.csr.mcause, cpu.csr.mstatus);
+	#endif
+	return ;
+}
 static int decode_exec(Decode* s) {
 	int rd = 0;
 	word_t src1 = 0, src2 = 0, imm = 0;
@@ -90,7 +103,7 @@ static int decode_exec(Decode* s) {
 	INSTPAT("??????? ????? ????? 010 ????? 00100 11", slti , I, R(rd) = (int32_t)src1 < (int32_t)SEXT(imm, 32));
 	INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw ,I, word_t t=*CSRs(imm);*CSRs(imm)=src1; R(rd)=t);
 	INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs ,I, word_t t=*CSRs(imm);*CSRs(imm)=t | src1; R(rd)=t);
-	INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall ,I, s -> dnpc =isa_raise_intr(11, s->pc));
+	INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall ,I, s -> dnpc =isa_raise_intr(11, s->pc);etrace());
 
 
 	INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add,  R, R(rd) = src1 + src2);
@@ -122,7 +135,7 @@ static int decode_exec(Decode* s) {
 	INSTPAT("0000000 ????? ????? 101 ????? 01100 11", sra,  R, R(rd) = src1 >> BITS(src2,4,0));
 	INSTPAT("0000001 ????? ????? 010 ????? 01100 11", mulhsu, R, R(rd)=SEXT((int32_t)src1,64)*SEXT(src2,64)>>32);
 	INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu, R, R(rd)=SEXT(src1,64)*SEXT(src2,64)>>32);
-	INSTPAT("0011000 00010 00000 000 00000 11100 11", mret,  R, s->dnpc = cpu.csr.mepc, cpu.csr.mstatus = 0x00000080);
+	INSTPAT("0011000 00010 00000 000 00000 11100 11", mret,  R, MRET);
 
 	INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb, S, Mw(src1 + imm, 1, src2));
 	INSTPAT("??????? ????? ????? 010 ????? 01000 11", sw, S, Mw(src1 + imm, 4, src2));

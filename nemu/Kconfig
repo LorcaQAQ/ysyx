@@ -152,18 +152,23 @@ config ITRACE_COND
   default "true"
 
   config MTRACE
-  depends on ITRACE
+  depends on TRACE
   bool "Enable memory trace"
   default y
 
   config FTRACE
-  depends on ITRACE
+  depends on TRACE
   bool "Enable function trace"
   default y
 
 config DTRACE
-  depends on ITRACE&&DEVICE
+  depends on TRACE&&DEVICE
   bool "Enable device drace"
+  default y
+
+config ETRACE
+  depends on TRACE
+  bool "Enable exception tracer"
   default y
 
 
