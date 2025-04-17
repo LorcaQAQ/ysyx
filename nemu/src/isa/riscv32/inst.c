@@ -67,7 +67,7 @@ word_t  *CSRs(uint16_t imm){
 
 void etrace(){
 	#ifdef CONFIG_ETRACE
-	printf(ANSI_FMT("[ETRACE]", ANSI_FG_MAGENTA) "Exception happens at pc = " FMT_WORD ", Cause value = %d, Status= 0x%08x\n",  cpu.csr.mepc, cpu.csr.mcause, cpu.csr.mstatus);
+	printf("\n"ANSI_FMT("[ETRACE]", ANSI_FG_MAGENTA) "Exception happens at pc = " FMT_WORD ", Cause value = %d, Status= 0x%08x\n",  cpu.csr.mepc, cpu.csr.mcause, cpu.csr.mstatus);
 	#endif
 	return ;
 }
