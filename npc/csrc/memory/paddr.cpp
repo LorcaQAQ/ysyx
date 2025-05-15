@@ -26,11 +26,13 @@ static void restart() {
 
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
+  cpu.csr.mstatus=0x1800;
 }
 
 static void out_of_bound(uint32_t addr) {
-  printf("address = 0x%08x is out of bound of pmem [0x%08x, 0x%08x] at pc = " FMT_WORD,
+  printf("address = 0x%08x is out of bound of pmem [0x%08x, 0x%08x] at pc = " FMT_WORD"\n",
       addr, PMEM_LEFT, PMEM_RIGHT, top->io_pc);
+    assert(0);
 }
 
 uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; }

@@ -44,6 +44,9 @@ class EXU extends Module {
     val val1 = Input(UInt(32.W))
     val val2 = Input(UInt(32.W))
     val result = Output(UInt(32.W))
+
+    val csr_alu_op = Input(UInt(CSR_ALU_CTRL_LEN.W))
+    val csr_result=Output(UInt(32.W))
   })
   
   val diff = Cat(0.U(1.W), io.val1) - Cat(0.U(1.W), io.val2)  // 扩展为 33 位
@@ -72,7 +75,7 @@ class EXU extends Module {
   val srlvalue = io.val1 >> io.val2(4,0)
   val andvalue = io.val1 & io.val2
   val or=io.val1 | io.val2
-    io.result := MuxCase(0.U, Array(
+  io.result := MuxCase(0.U, Array(
       (io.alu_op === ALU_ADD) -> sum,
       (io.alu_op === ALU_JALR) -> ( sum &("hfffffffe".U)),
       (io.alu_op === ALU_SLTU) -> (Fill(31,0.U)##borrow).asUInt,
@@ -89,7 +92,12 @@ class EXU extends Module {
       (io.alu_op === ALU_BGEU) -> (Fill(31,0.U)## borrow).asUInt,
       (io.alu_op === ALU_BLTU) -> (Fill(31,0.U)## !borrow).asUInt,
       (io.alu_op === ALU_SLT) -> (Fill(31,0.U)##less).asUInt,
-      (io.alu_op === ALU_BLT) -> (Fill(31,0.U)## !less).asUInt
+      (io.alu_op === ALU_BLT) -> (Fill(31,0.U)## !less).asUInt,
+      (io.alu_op === ALU_COPY_CSR) -> io.val2
+    ))
+    io.csr_result :=  MuxCase(0.U, Array(
+      (io.csr_alu_op === CSR_ALU_COPY) -> (io.val1),
+      (io.csr_alu_op === CSR_ALU_OR)   -> (io.val1 | io.val2)
     ))
 
 }

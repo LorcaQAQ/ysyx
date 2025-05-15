@@ -6,14 +6,17 @@ module IDU(
                 io_rd,
   output [31:0] io_imm,
   output        io_rf_wen,
-  output [1:0]  io_rf_wdata_sel,
-  output [2:0]  io_alu_op1_sel,
+  output [2:0]  io_rf_wdata_sel,
+                io_alu_op1_sel,
                 io_alu_op2_sel,
   output [4:0]  io_alu_op,
   output [1:0]  io_jump_op,
   output        io_mem_wen,
                 io_mem_valid,
-  output [2:0]  io_load_store_range
+  output [2:0]  io_load_store_range,
+  output [1:0]  io_csr_r_w_ctrl,
+  output [11:0] io_csr_r_w_addr,
+  output [2:0]  io_csr_alu_op
 );
 
   wire [9:0]       _GEN = {io_instr[14:12], io_instr[6:0]};
@@ -54,7 +57,11 @@ module IDU(
   wire             _csignals_T_67 = _GEN_0 == 17'h2B3;
   wire             _csignals_T_69 = _GEN == 10'h3;
   wire             _csignals_T_71 = _GEN == 10'h313;
-  wire             _csignals_T_74 = _GEN == 10'h113;
+  wire             _csignals_T_73 = _GEN == 10'h113;
+  wire             _csignals_T_75 = _GEN == 10'hF3;
+  wire             _csignals_T_84 = _GEN == 10'h173;
+  wire             _csignals_T_79 = io_instr == 32'h73;
+  wire             _csignals_T_81 = io_instr == 32'h30200073;
   wire             _GEN_1 = _csignals_T_53 | _csignals_T_55;
   wire             _GEN_2 = _csignals_T_49 | _csignals_T_51;
   wire             _GEN_3 = _csignals_T_45 | _csignals_T_47;
@@ -73,16 +80,21 @@ module IDU(
              & (_GEN_2 | ~_GEN_1
                 & (_csignals_T_57 | ~_csignals_T_59
                    & (_csignals_T_61 | _csignals_T_63 | _csignals_T_65 | _csignals_T_67
-                      | _csignals_T_69 | _csignals_T_71 | _csignals_T_74))))));
-  wire             _GEN_8 = _csignals_T_71 | _csignals_T_74;
-  wire             _GEN_9 = _csignals_T_69 | _GEN_8;
-  wire             _GEN_10 = _csignals_T_65 | _csignals_T_67;
-  wire             _GEN_11 = _csignals_T_61 | _csignals_T_63;
-  wire             _GEN_12 = _csignals_T_3 | _csignals_T_5;
+                      | _csignals_T_69 | _csignals_T_71 | _csignals_T_73 | _csignals_T_75
+                      | _csignals_T_84))))));
+  wire             _GEN_8 = _csignals_T_75 | _csignals_T_84;
+  wire             _GEN_9 = _csignals_T_71 | _csignals_T_73 | _GEN_8;
+  wire             _GEN_10 =
+    _csignals_T_61 | _csignals_T_63 | _csignals_T_65 | _csignals_T_67 | _csignals_T_69
+    | _GEN_9;
+  wire             _GEN_11 = _csignals_T_69 | _csignals_T_71 | _csignals_T_73;
+  wire             _GEN_12 = _csignals_T_65 | _csignals_T_67;
+  wire             _GEN_13 = _csignals_T_61 | _csignals_T_63;
+  wire             _GEN_14 = _csignals_T_3 | _csignals_T_5;
   wire [2:0]       csignals_2 =
     _csignals_T_1
       ? 3'h1
-      : _GEN_12
+      : _GEN_14
           ? 3'h2
           : _csignals_T_7
               ? 3'h3
@@ -119,30 +131,33 @@ module IDU(
                                                                           ? 3'h0
                                                                           : _csignals_T_59
                                                                               ? 3'h5
-                                                                              : _GEN_11
+                                                                              : _GEN_13
                                                                                   ? 3'h1
-                                                                                  : _GEN_10
+                                                                                  : _GEN_12
                                                                                       ? 3'h0
-                                                                                      : {2'h0,
-                                                                                         _GEN_9};
-  wire             _GEN_13 =
+                                                                                      : _GEN_11
+                                                                                          ? 3'h1
+                                                                                          : _GEN_8
+                                                                                              ? 3'h6
+                                                                                              : 3'h0;
+  wire             _GEN_15 =
     _csignals_T_19 | _csignals_T_21 | _csignals_T_23 | _csignals_T_25 | _csignals_T_27;
-  wire             _GEN_14 = _csignals_T_7 | _csignals_T_9;
-  wire             _GEN_15 = _csignals_T_1 | _GEN_12;
-  wire             _GEN_16 = _csignals_T_11 | _csignals_T_13;
-  wire             _GEN_17 =
+  wire             _GEN_16 = _csignals_T_7 | _csignals_T_9;
+  wire             _GEN_17 = _csignals_T_1 | _GEN_14;
+  wire             _GEN_18 = _csignals_T_11 | _csignals_T_13;
+  wire             _GEN_19 =
     _csignals_T_45 | _csignals_T_47 | _csignals_T_49 | _csignals_T_51 | _csignals_T_53
     | _csignals_T_55 | _csignals_T_57 | _csignals_T_59;
-  wire             _GEN_18 = _csignals_T_15 | _csignals_T_17 | _GEN_13;
-  wire             _GEN_19 = _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _GEN_14;
+  wire             _GEN_20 = _csignals_T_15 | _csignals_T_17 | _GEN_15;
+  wire             _GEN_21 = _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _GEN_16;
   wire [1:0]       csignals_6 =
-    _GEN_19
+    _GEN_21
       ? 2'h0
       : _csignals_T_11
           ? 2'h2
           : _csignals_T_13
               ? 2'h1
-              : _GEN_18
+              : _GEN_20
                   ? 2'h0
                   : _csignals_T_29
                       ? 2'h2
@@ -152,12 +167,22 @@ module IDU(
                               ? 2'h0
                               : _csignals_T_43
                                   ? 2'h1
-                                  : _GEN_17
+                                  : _GEN_19
                                       ? 2'h0
-                                      : _GEN_11
+                                      : _GEN_13
                                           ? 2'h2
-                                          : _GEN_10 ? 2'h0 : {_csignals_T_69, 1'h0};
-  wire [7:0][31:0] _GEN_20 =
+                                          : _GEN_12 ? 2'h0 : {_csignals_T_69, 1'h0};
+  wire             _GEN_22 =
+    _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _csignals_T_7 | _csignals_T_9
+    | _csignals_T_11 | _csignals_T_13 | _csignals_T_15 | _csignals_T_17 | _csignals_T_19
+    | _csignals_T_21 | _csignals_T_23 | _csignals_T_25 | _csignals_T_27 | _csignals_T_29
+    | _csignals_T_31 | _csignals_T_33 | _csignals_T_35 | _csignals_T_37 | _csignals_T_39
+    | _csignals_T_41 | _csignals_T_43 | _csignals_T_45 | _csignals_T_47 | _csignals_T_49
+    | _csignals_T_51 | _csignals_T_53 | _csignals_T_55 | _csignals_T_57 | _csignals_T_59
+    | _csignals_T_61 | _csignals_T_63 | _csignals_T_65 | _csignals_T_67 | _GEN_11;
+  wire [1:0]       csignals_8 =
+    _GEN_22 ? 2'h0 : _GEN_8 ? 2'h1 : _csignals_T_79 ? 2'h2 : {2{_csignals_T_81}};
+  wire [7:0][31:0] _GEN_23 =
     {{32'h0},
      {32'h0},
      {{{20{io_instr[31]}}, io_instr[7], io_instr[30:25], io_instr[11:8], 1'h0}},
@@ -169,47 +194,47 @@ module IDU(
   assign io_rs1 = io_instr[19:15];
   assign io_rs2 = io_instr[24:20];
   assign io_rd = csignals_0 ? io_instr[11:7] : 5'h0;
-  assign io_imm = _GEN_20[csignals_2];
+  assign io_imm = _GEN_23[csignals_2];
   assign io_rf_wen = csignals_0;
   assign io_rf_wdata_sel =
-    _GEN_15
-      ? 2'h1
-      : _GEN_14
-          ? 2'h2
+    _GEN_17
+      ? 3'h1
+      : _GEN_16
+          ? 3'h2
           : _csignals_T_11
-              ? 2'h3
+              ? 3'h3
               : _csignals_T_13
-                  ? 2'h0
+                  ? 3'h0
                   : _csignals_T_15
-                      ? 2'h1
+                      ? 3'h1
                       : _csignals_T_17
-                          ? 2'h0
-                          : _GEN_13
-                              ? 2'h1
+                          ? 3'h0
+                          : _GEN_15
+                              ? 3'h1
                               : _csignals_T_29
-                                  ? 2'h3
+                                  ? 3'h3
                                   : _csignals_T_31
-                                      ? 2'h0
+                                      ? 3'h0
                                       : _GEN_5
-                                          ? 2'h1
+                                          ? 3'h1
                                           : _GEN_4
-                                              ? 2'h0
+                                              ? 3'h0
                                               : _GEN_2
-                                                  ? 2'h1
+                                                  ? 3'h1
                                                   : _GEN_1
-                                                      ? 2'h0
+                                                      ? 3'h0
                                                       : _csignals_T_57
-                                                          ? 2'h1
+                                                          ? 3'h1
                                                           : _csignals_T_59
-                                                              ? 2'h0
-                                                              : _GEN_11
-                                                                  ? 2'h3
-                                                                  : _GEN_10
-                                                                      ? 2'h1
+                                                              ? 3'h0
+                                                              : _GEN_13
+                                                                  ? 3'h3
+                                                                  : _GEN_12
+                                                                      ? 3'h1
                                                                       : _csignals_T_69
-                                                                          ? 2'h3
-                                                                          : {1'h0,
-                                                                             _GEN_8};
+                                                                          ? 3'h3
+                                                                          : {2'h0,
+                                                                             _GEN_9};
   assign io_alu_op1_sel =
     _csignals_T_1
       ? 3'h1
@@ -226,15 +251,14 @@ module IDU(
                        | _csignals_T_33 | _csignals_T_35 | _csignals_T_37 | _csignals_T_39
                        | _csignals_T_41 | _csignals_T_43 | _csignals_T_45 | _csignals_T_47
                        | _csignals_T_49 | _csignals_T_51 | _csignals_T_53 | _csignals_T_55
-                       | _csignals_T_57 | _csignals_T_59 | _csignals_T_61 | _csignals_T_63
-                       | _csignals_T_65 | _csignals_T_67 | _GEN_9};
+                       | _csignals_T_57 | _csignals_T_59 | _GEN_10};
   assign io_alu_op2_sel = csignals_2;
   assign io_alu_op =
     _csignals_T_1 | _csignals_T_3 | _csignals_T_5 | _csignals_T_7
       ? 5'h1
       : _csignals_T_9
           ? 5'h2
-          : _GEN_16
+          : _GEN_18
               ? 5'h1
               : _csignals_T_15
                   ? 5'h3
@@ -278,7 +302,7 @@ module IDU(
                                                                                               ? 5'h10
                                                                                               : _csignals_T_59
                                                                                                   ? 5'h11
-                                                                                                  : _GEN_11
+                                                                                                  : _GEN_13
                                                                                                       ? 5'h1
                                                                                                       : _csignals_T_65
                                                                                                           ? 5'h7
@@ -288,12 +312,15 @@ module IDU(
                                                                                                                   ? 5'h1
                                                                                                                   : _csignals_T_71
                                                                                                                       ? 5'hA
-                                                                                                                      : {_csignals_T_74,
-                                                                                                                         4'h0};
+                                                                                                                      : _csignals_T_73
+                                                                                                                          ? 5'h10
+                                                                                                                          : _GEN_8
+                                                                                                                              ? 5'h12
+                                                                                                                              : 5'h0;
   assign io_jump_op =
-    _GEN_15
+    _GEN_17
       ? 2'h0
-      : _GEN_14
+      : _GEN_16
           ? 2'h1
           : _csignals_T_11 | _csignals_T_13 | _csignals_T_15
               ? 2'h0
@@ -310,15 +337,21 @@ module IDU(
                               ? 2'h0
                               : _GEN_1
                                   ? 2'h2
-                                  : _csignals_T_57 ? 2'h0 : {_csignals_T_59, 1'h0};
+                                  : _csignals_T_57
+                                      ? 2'h0
+                                      : _csignals_T_59
+                                          ? 2'h2
+                                          : _GEN_10
+                                              ? 2'h0
+                                              : {2{_csignals_T_79 | _csignals_T_81}};
   assign io_mem_wen = csignals_6 == 2'h1;
   assign io_mem_valid = |csignals_6;
   assign io_load_store_range =
-    _GEN_19
+    _GEN_21
       ? 3'h0
-      : _GEN_16
+      : _GEN_18
           ? 3'h1
-          : _GEN_18
+          : _GEN_20
               ? 3'h0
               : _csignals_T_29
                   ? 3'h2
@@ -328,12 +361,16 @@ module IDU(
                           ? 3'h0
                           : _csignals_T_43
                               ? 3'h2
-                              : _GEN_17
+                              : _GEN_19
                                   ? 3'h0
                                   : _csignals_T_61
                                       ? 3'h4
                                       : _csignals_T_63
                                           ? 3'h3
-                                          : _GEN_10 | ~_csignals_T_69 ? 3'h0 : 3'h5;
+                                          : _GEN_12 | ~_csignals_T_69 ? 3'h0 : 3'h5;
+  assign io_csr_r_w_ctrl = csignals_8;
+  assign io_csr_r_w_addr = csignals_8 == 2'h1 ? io_instr[31:20] : 12'h0;
+  assign io_csr_alu_op =
+    _GEN_22 ? 3'h0 : _csignals_T_75 ? 3'h1 : {1'h0, _csignals_T_84, 1'h0};
 endmodule
 

@@ -3,7 +3,9 @@ module EXU(
   input  [4:0]  io_alu_op,
   input  [31:0] io_val1,
                 io_val2,
-  output [31:0] io_result
+  output [31:0] io_result,
+  input  [2:0]  io_csr_alu_op,
+  output [31:0] io_csr_result
 );
 
   wire [32:0] _diff_T_2 = {1'h0, io_val1} - {1'h0, io_val2};
@@ -14,6 +16,7 @@ module EXU(
   wire        less = le & (|(_diff_T_2[31:0]));
   wire [31:0] _GEN = {27'h0, io_val2[4:0]};
   wire [62:0] sllvalue = {31'h0, io_val1} << io_val2[4:0];
+  wire [31:0] or_0 = io_val1 | io_val2;
   assign io_result =
     io_alu_op == 5'h1
       ? _sum_T
@@ -34,7 +37,7 @@ module EXU(
                                   : io_alu_op == 5'h9
                                       ? io_val1 & io_val2
                                       : io_alu_op == 5'hA
-                                          ? io_val1 | io_val2
+                                          ? or_0
                                           : io_alu_op == 5'hB
                                               ? {31'h0, le}
                                               : io_alu_op == 5'hC
@@ -49,6 +52,10 @@ module EXU(
                                                                   ? {31'h0, less}
                                                                   : io_alu_op == 5'h11
                                                                       ? {31'h0, ~less}
-                                                                      : 32'h0;
+                                                                      : io_alu_op == 5'h12
+                                                                          ? io_val2
+                                                                          : 32'h0;
+  assign io_csr_result =
+    io_csr_alu_op == 3'h1 ? io_val1 : io_csr_alu_op == 3'h2 ? or_0 : 32'h0;
 endmodule
 

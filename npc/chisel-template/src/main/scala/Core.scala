@@ -13,6 +13,7 @@ import exu._
 import instructions.RV32I._
 import mem._
 import consts.Consts._
+import csr._
 /* 
 class ebreak extends HasBlackBoxInline {
   val io = IO(new Bundle {
@@ -94,6 +95,7 @@ class Core extends Module {
     val get_instruction = Module(new get_instruction)
     val instr_fetch = Module(new instr_fetch)
     val mem = Module(new MEM(32))
+    val csr =Module(new CSRs(32))
 
     get_instruction.io.instr := io.instr
 
@@ -104,7 +106,7 @@ class Core extends Module {
     io.pc := ifu.io.pc
     
     //jump logic/branch logic
-    val jal_en = (idu.io.jump_op === JUMP)
+    val jal_en = (idu.io.jump_op === JUMP) || (idu.io.jump_op === JUMP_CSR)
     val branch_en = idu.io.jump_op === JUMP_COND&&
                     exu.io.result === 0.U &&
                     ( idu.io.alu_op ===ALU_BNE  ||   
@@ -117,7 +119,8 @@ class Core extends Module {
     ifu.io.alu_pc :=  MuxCase(ifu.io.pc, Array(
       (idu.io.jump_op === JUMP) -> exu.io.result,
       (idu.io.jump_op === NO_JUMP) -> ifu.io.pc,
-      (idu.io.jump_op === JUMP_COND) -> Mux(branch_en , ifu.io.pc+idu.io.imm, ifu.io.pc)
+      (idu.io.jump_op === JUMP_COND) -> Mux(branch_en , ifu.io.pc+idu.io.imm, ifu.io.pc),
+      (idu.io.jump_op === JUMP_CSR) -> csr.io.csr_pc
     ))
     ifu.io.jump_en := jal_en|| branch_en
     //IDU IO
@@ -148,12 +151,22 @@ class Core extends Module {
     
     //EXU IO
     exu.io.alu_op := idu.io.alu_op
-    exu.io.val1 := MuxCase(OP1_X, Array(
+    exu.io.csr_alu_op :=idu.io.csr_alu_op
+    exu.io.val1 := MuxCase(0.U, Array(
       (idu.io.alu_op1_sel === OP1_X) -> regfile.io.rdata1,
       (idu.io.alu_op1_sel === OP1_RS1) -> regfile.io.rdata1,
       (idu.io.alu_op1_sel === OP1_PC) -> ifu.io.pc
     ))
-    exu.io.val2 := Mux(idu.io.alu_op2_sel === OP2_RS2_IMMB || idu.io.alu_op2_sel === OP2_RS2, regfile.io.rdata2, idu.io.imm)
+    exu.io.val2 := MuxCase(0.U, Array(
+      (idu.io.alu_op2_sel === OP2_RS2_IMMB) -> regfile.io.rdata2,
+      (idu.io.alu_op2_sel === OP2_RS2) -> regfile.io.rdata2,
+      (idu.io.alu_op2_sel === OP2_IMMI) -> idu.io.imm,
+      (idu.io.alu_op2_sel === OP2_IMMU) -> idu.io.imm,
+      (idu.io.alu_op2_sel === OP2_IMMJ) -> idu.io.imm,
+      (idu.io.alu_op2_sel === OP2_IMMS) -> idu.io.imm,
+      (idu.io.alu_op2_sel === OP2_CSR) -> csr.io.csr_r_data,
+
+    ))
 
     //MEM IO
     val mem_wdata = Wire(UInt(32.W))
@@ -174,6 +187,11 @@ class Core extends Module {
     ))
     mem.io.clk := clock
     io.result := exu.io.val1 
+
+    csr.io.csr_w_data := exu.io.csr_result
+    csr.io.csr_addr := idu.io.csr_r_w_addr
+    csr.io.csr_r_w_ctrl := idu.io.csr_r_w_ctrl
+    csr.io.pc := ifu.io.pc
 }
 
 /**

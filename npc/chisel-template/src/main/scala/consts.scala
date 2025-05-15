@@ -21,9 +21,10 @@ object Consts{
     val OP2_IMMJ = 3.U(OP2_LEN.W)
     val OP2_IMMS = 4.U(OP2_LEN.W)
     val OP2_RS2_IMMB = 5.U(OP2_LEN.W)
-    val OP2_IMMS_RS2 = 6.U(OP2_LEN.W)
+    //val OP2_IMMS_RS2 = 6.U(OP2_LEN.W)
+    val OP2_CSR=6.U(OP2_LEN.W)
   //REG WRITE DATA
-    val REG_DATA_LEN=2
+    val REG_DATA_LEN=3
     val REG_DATA_ALU = 1.U(REG_DATA_LEN.W)
     val REG_DATA_PC = 2.U(REG_DATA_LEN.W)
     val REG_DATA_X = 0.U(REG_DATA_LEN.W)
@@ -48,11 +49,13 @@ object Consts{
     val ALU_BLTU = 15.U(ALU_LEN.W)
     val ALU_SLT = 16.U(ALU_LEN.W)
     val ALU_BLT = 17.U(ALU_LEN.W)
+    val ALU_COPY_CSR=18.U(ALU_LEN.W)
     //JUMP
     val JUMP_LEN=2
     val JUMP = 1.U(JUMP_LEN.W)
     val NO_JUMP = 0.U(JUMP_LEN.W)
     val JUMP_COND = 2.U(JUMP_LEN.W)
+    val JUMP_CSR=3.U(JUMP_LEN.W)
     //Memory
     val MEM_LEN=2
     val MEM_X = 0.U(MEM_LEN.W)
@@ -66,4 +69,18 @@ object Consts{
     val Half_U = 3.U(LOAD_LEN.W)
     val Half_S = 4.U(LOAD_LEN.W)
     val BYTE_S = 5.U(LOAD_LEN.W)
+    //CSR R W CONTROL
+    val CSR_R_W_CTRL_LEN=2
+    val CSR_R_W_X = 0.U(CSR_R_W_CTRL_LEN.W)
+    val CSR_R_W_EN = 1.U(CSR_R_W_CTRL_LEN.W)
+    val CSR_ECALL = 2.U(CSR_R_W_CTRL_LEN.W)
+    val CSR_MRET = 3.U(CSR_R_W_CTRL_LEN.W)
+
+    //CSR ALU
+    val CSR_ALU_CTRL_LEN=3
+    val CSR_ALU_X=0.U(CSR_ALU_CTRL_LEN.W)
+    val CSR_ALU_COPY=1.U(CSR_ALU_CTRL_LEN.W)
+    val CSR_ALU_OR=2.U(CSR_ALU_CTRL_LEN.W)
+  
+
 }

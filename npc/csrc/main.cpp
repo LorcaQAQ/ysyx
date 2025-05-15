@@ -35,6 +35,7 @@ extern void difftest_step(vaddr_t pc, vaddr_t npc);
 
 extern svBitVecVal get_reg(int index);
 extern svBitVecVal get_instr();
+extern svBitVecVal get_csr(int index);
 
 // global variables
 VerilatedContext *contextp = new VerilatedContext;
@@ -388,6 +389,14 @@ void cpu_reg_update()
   {
     cpu.gpr[i]=get_reg(i);
   }
+  const svScope scope_csr = svGetScopeFromName("TOP.Core.csr.csr_display");
+  assert(scope_csr); // Check for nullptr if scope not found
+  svSetScope(scope_csr);
+  cpu.csr.mstatus=get_csr(0);
+  cpu.csr.mtvec=get_csr(1);
+  cpu.csr.mepc=get_csr(2);
+  cpu.csr.mcause=get_csr(3);
+
   cpu.pc=top->io_pc;
 }
 int is_exit_status_bad() {
