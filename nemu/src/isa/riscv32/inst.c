@@ -23,7 +23,7 @@
 #define Mw vaddr_write
 
 enum {
-	TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_N, TYPE_R,TYPE_B// none
+	TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_N, TYPE_R,TYPE_B,TYPE_CSRI// none
 };
 
 #define MRET \
@@ -35,6 +35,7 @@ enum {
 
 #define src1R() do { *src1 = R(rs1); } while (0)
 #define src2R() do { *src2 = R(rs2); } while (0)
+#define src1I() do { *src1 = BITS(i, 19, 15); } while (0)
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
 #define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
@@ -52,6 +53,7 @@ static void decode_operand(Decode* s, int* rd, word_t* src1, word_t* src2, word_
 	case TYPE_J:									 immJ(); break;
 	case TYPE_R: src1R(); src2R();         break;
 	case TYPE_B: src1R(); src2R(); immB(); break;
+	case TYPE_CSRI:src1I(); immI();  	   break;
 	}
 }
 word_t  *CSRs(uint16_t imm){
@@ -60,8 +62,9 @@ word_t  *CSRs(uint16_t imm){
 		case 0x305:return &(cpu.csr.mtvec);
 		case 0x341:return &(cpu.csr.mepc);
 		case 0x342:return &(cpu.csr.mcause);
-		case 0x180:return &(cpu.csr.satp);
-		default   :printf("The CSR[%04x] is unspecified in nemu!\n", imm);return NULL;
+		// case 0x180:return &(cpu.csr.satp);
+		// case 0x787:return &(cpu.csr.midef);
+		default   :printf("The CSR[0x%04x] is unspecified in nemu!\n", imm);return NULL;
 	}
 }
 
@@ -104,6 +107,7 @@ static int decode_exec(Decode* s) {
 	INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw ,I, word_t t=*CSRs(imm);*CSRs(imm)=src1; R(rd)=t);
 	INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs ,I, word_t t=*CSRs(imm);*CSRs(imm)=t | src1; R(rd)=t);
 	INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall ,I, s -> dnpc =isa_raise_intr(11, s->pc);etrace());
+	// INSTPAT("??????? ????? ????? 110 ????? 11100 11", csrrsi ,CSRI,word_t t=*CSRs(imm);*CSRs(imm) =t | src1;R(rd)=t );
 
 
 	INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add,  R, R(rd) = src1 + src2);

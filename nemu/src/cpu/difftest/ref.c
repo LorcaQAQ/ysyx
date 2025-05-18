@@ -19,10 +19,13 @@
 #include <memory/paddr.h>
 
 #define NR_GPR MUXDEF(CONFIG_RVE, 16, 32)
+
 struct diff_context_t {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
   word_t pc;
+  CSR csr;
 };
+
 
 void diff_get_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
@@ -30,6 +33,10 @@ void diff_get_regs(void* diff_context) {
     ctx->gpr[i] = cpu.gpr[i];
   }
   ctx->pc = cpu.pc;
+  ctx->csr.mstatus = cpu.csr.mstatus;
+  ctx->csr.mepc = cpu.csr.mepc;
+  ctx->csr.mcause = cpu.csr.mcause;
+  ctx->csr.mtvec = cpu.csr.mtvec;
 }
 
 void diff_set_regs(void* diff_context) {
@@ -38,6 +45,10 @@ void diff_set_regs(void* diff_context) {
     cpu.gpr[i] = ctx->gpr[i];
   }
   cpu.pc = ctx->pc;
+  cpu.csr.mstatus= ctx->csr.mstatus;
+  cpu.csr.mepc= ctx->csr.mepc;
+  cpu.csr.mcause= ctx->csr.mcause;
+  cpu.csr.mtvec= ctx->csr.mtvec;
 }
 
 

@@ -23,7 +23,6 @@ typedef struct {
   vaddr_t mepc;
   word_t mcause;
   vaddr_t mtvec;
-  word_t satp;
 } CSR;
 
 typedef struct {

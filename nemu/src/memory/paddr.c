@@ -75,9 +75,9 @@ void paddr_write(paddr_t addr, int len, word_t data) {
 
 
 void display_mem_read(paddr_t addr){
-  printf("memory read at " FMT_PADDR ", PC=" FMT_WORD"\n", addr, cpu.pc);
+  printf(ANSI_FMT("Memory read ",ANSI_FG_YELLOW)" At " FMT_PADDR ", PC=" FMT_WORD"\n", addr, cpu.pc);
 }
 
 void display_mem_write(paddr_t addr, word_t data){
-  printf("Memory write at " FMT_PADDR ", PC=" FMT_WORD", DATA is " FMT_WORD"\n", addr, cpu.pc,data);
+  printf(ANSI_FMT("Memory write",ANSI_FG_MAGENTA)" At " FMT_PADDR ", PC=" FMT_WORD", DATA is " FMT_WORD"\n", addr, cpu.pc,data);
 }

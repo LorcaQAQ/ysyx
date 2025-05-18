@@ -31,7 +31,7 @@ CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
-
+FILE *ftrace_log = NULL;
 
 void device_update();
 #ifdef CONFIG_ITRACE_COND 
@@ -55,7 +55,8 @@ static void trace_and_difftest(Decode* _this, vaddr_t dnpc) {
             cur->new_value = value;
             if (cur->new_value != cur->old_value) {
                 nemu_state.state = NEMU_STOP;
-                printf("Detect changes in No.%d watchpoint:\"%s\"\nOld value=%u\nNew value=%u\n", cur->NO, cur->expr, cur->old_value, cur->new_value);
+                printf("Detect changes in No.%d watchpoint:\"%s\" at PC="FMT_WORD" \nOld value=%u\nNew value=%u\n", 
+                    cur->NO, cur->expr,_this->pc, cur->old_value, cur->new_value);
             }
         }
         else {
@@ -141,9 +142,9 @@ void cpu_exec(uint64_t n) {
     }
 
     uint64_t timer_start = get_time();
-
+    ftrace_log = fopen("ftrace.log", "a");
     execute(n);
-
+    fclose(ftrace_log);
     uint64_t timer_end = get_time();
     g_timer += timer_end - timer_start;
 
@@ -190,9 +191,11 @@ int display_ftrace(Decode s,int n){
                 {
                     if(s.dnpc>=func_pool[i].addr&&s.dnpc<=(func_pool[i].addr+func_pool[i].offset))
                     {
-                        printf("%x:",s.pc);
+                        printf("0X%08x:",s.pc);
+                        fprintf(ftrace_log, "0X%08x:", s.pc);
                         print_space(n);
-                        printf("ret[%s@%x]\n",func_pool[i].name,s.dnpc);
+                        printf(ANSI_FMT("Ret",ANSI_FG_MAGENTA)"[%s@%x]\n",func_pool[i].name,s.dnpc);
+                        fprintf(ftrace_log, "Ret [%s@%x]\n",func_pool[i].name,s.dnpc);
                     }       
                 }
            }else
@@ -200,9 +203,11 @@ int display_ftrace(Decode s,int n){
             for(int i=0;i<func_cnt;i++){
                 if(s.dnpc==func_pool[i].addr)
                 {
-                    printf("%x:",s.pc);
+                    printf("0X%08x:",s.pc);
+                    fprintf(ftrace_log, "0X%08x:", s.pc);
                     print_space(n);
-                    printf("call [%s@0x%x]\n",func_pool[i].name,func_pool[i].addr);
+                    printf(ANSI_FMT("Call",ANSI_FG_CYAN)"[%s@0x%x]\n",func_pool[i].name,func_pool[i].addr);
+                    fprintf(ftrace_log, "Call[%s@0x%x]\n", func_pool[i].name, func_pool[i].addr);
                 }
                 
             }
@@ -210,5 +215,5 @@ int display_ftrace(Decode s,int n){
            }
         }
 
-    return n;
+    return 0;
 }

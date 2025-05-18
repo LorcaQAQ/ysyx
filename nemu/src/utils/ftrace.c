@@ -5,11 +5,11 @@
 #include <isa.h>
 
 int load_elf(char *elf_file){
-    FILE *fp=fopen(elf_file,"r");
-    if (elf_file == NULL) {
+  if (elf_file == NULL) {
     Log("No elf is given.");
-    return 0; // built-in image size
+    return 0; 
   }
+  FILE *fp=fopen(elf_file,"r");
   Assert(fp, "Can not open '%s'", elf_file);
   fseek(fp, 0, SEEK_SET);
    
@@ -122,11 +122,11 @@ int load_elf(char *elf_file){
   }
   func_pool=(ELF_FUNC *)malloc(sizeof(ELF_FUNC)*func_cnt);
 
+  int j=0; 
   for(int i=0;i<sym_num;i++)
   {
       temp=strtab;
       temp=strtab+esym[i].st_name;
-      int j=0; 
       if(ELF32_ST_TYPE(esym[i].st_info)==STT_FUNC)
       {
         //printf("函数名:%s\t",temp);
