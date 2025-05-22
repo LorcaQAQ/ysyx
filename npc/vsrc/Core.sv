@@ -26,7 +26,7 @@ module Core(
   wire [4:0]       _idu_io_alu_op;
   wire [1:0]       _idu_io_jump_op;
   wire             _idu_io_mem_wen;
-  wire             _idu_io_mem_valid;
+  wire             _idu_io_mem_ren;
   wire [2:0]       _idu_io_load_store_range;
   wire [1:0]       _idu_io_csr_r_w_ctrl;
   wire [11:0]      _idu_io_csr_r_w_addr;
@@ -80,7 +80,7 @@ module Core(
     .io_alu_op           (_idu_io_alu_op),
     .io_jump_op          (_idu_io_jump_op),
     .io_mem_wen          (_idu_io_mem_wen),
-    .io_mem_valid        (_idu_io_mem_valid),
+    .io_mem_ren          (_idu_io_mem_ren),
     .io_load_store_range (_idu_io_load_store_range),
     .io_csr_r_w_ctrl     (_idu_io_csr_r_w_ctrl),
     .io_csr_r_w_addr     (_idu_io_csr_r_w_addr),
@@ -127,7 +127,7 @@ module Core(
     .DATA_WIDTH(32)
   ) mem (
     .clk       (clock),
-    .valid     (_idu_io_mem_valid),
+    .mem_ren   (_idu_io_mem_ren),
     .mem_wen   (_idu_io_mem_wen),
     .mem_waddr (_exu_io_result),
     .mem_wdata

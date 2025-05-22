@@ -21,20 +21,28 @@
 #include <utils.h>
 #include <difftest-def.h>
 #include <generated/autoconf.h>
+#include <VCore.h>
+#include "verilated.h"
+#include "svdpi.h"
+#include "VCore__Dpi.h"
+#include <verilated_vcd_c.h>
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) = NULL;
 void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
+
 #ifdef CONFIG_DIFFTEST
 
+static bool is_skip_ref_reg = false;
 static bool is_skip_ref = false;
 static int skip_dut_nr_inst = 0;
+static uint32_t skip_dut_pc = 0;
 
 // this is used to let ref skip instructions which
 // can not produce consistent behavior with NEMU
 void difftest_skip_ref() {
-  is_skip_ref = true;
+  is_skip_ref_reg = true;
   // If such an instruction is one of the instruction packing in QEMU
   // (see below), we end the process of catching up with QEMU's pc to
   // keep the consistent behavior in our best.
@@ -115,11 +123,16 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
     return;
   }
 
-  if (is_skip_ref) {
+  if (is_skip_ref == true){
     // to skip the checking of an instruction, just copy the reg state to reference design
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
-    is_skip_ref = false;
+    is_skip_ref = is_skip_ref_reg ? true :false;
     return;
+  }
+
+  if (is_skip_ref_reg  == true){
+    is_skip_ref =true;
+    is_skip_ref_reg = false;
   }
 
   ref_difftest_exec(1);

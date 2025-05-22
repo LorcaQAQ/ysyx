@@ -123,11 +123,11 @@ int load_elf(char *elf_file){
   }
   func_pool=(ELF_FUNC *)malloc(sizeof(ELF_FUNC)*func_cnt);
 
+  int j=0; 
   for(int i=0;i<sym_num;i++)
   {
       temp=strtab;
       temp=strtab+esym[i].st_name;
-      int j=0; 
       if(ELF32_ST_TYPE(esym[i].st_info)==STT_FUNC)
       {
         //printf("函数名:%s\t",temp);

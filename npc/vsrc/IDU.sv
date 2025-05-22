@@ -12,7 +12,7 @@ module IDU(
   output [4:0]  io_alu_op,
   output [1:0]  io_jump_op,
   output        io_mem_wen,
-                io_mem_valid,
+                io_mem_ren,
   output [2:0]  io_load_store_range,
   output [1:0]  io_csr_r_w_ctrl,
   output [11:0] io_csr_r_w_addr,
@@ -345,7 +345,7 @@ module IDU(
                                               ? 2'h0
                                               : {2{_csignals_T_79 | _csignals_T_81}};
   assign io_mem_wen = csignals_6 == 2'h1;
-  assign io_mem_valid = |csignals_6;
+  assign io_mem_ren = csignals_6 == 2'h2;
   assign io_load_store_range =
     _GEN_21
       ? 3'h0

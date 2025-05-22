@@ -24,7 +24,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
     //         ANSI_FMT("ERROR", ANSI_FG_RED), cpu.pc, ref_r->pc);
     Log("Difftest: %s at pc = " FMT_WORD,
         ANSI_FMT("ERROR", ANSI_FG_RED),  pc);
-    Log("The value of pc  is different, ref: 0x%08x, dut: 0x%08x", ref_r->pc,  pc); 
+    Log("The value of pc  is different, ref: 0x%08x, dut: 0x%08x", ref_r->pc,  cpu.pc); 
     return false;
   }
   for (int i = 0; i < NR_GPR; i++) {

@@ -175,7 +175,7 @@ class Core extends Module {
       (load_store_range === Half_U) -> Cat(Fill(16,0.U),regfile.io.rdata2(15,0)),
       (load_store_range === BYTE_U) -> Cat(Fill(24,0.U),regfile.io.rdata2(7,0))
     ))
-    mem.io.valid := idu.io.mem_valid
+    mem.io.mem_ren := idu.io.mem_ren
     mem.io.mem_wen := idu.io.mem_wen
     mem.io.mem_waddr := exu.io.result
     mem.io.mem_wdata := mem_wdata

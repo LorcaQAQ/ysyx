@@ -136,6 +136,14 @@ gdb: $(BIN)
 clean:
 	@echo "Clean all the build files."
 	rm -rf $(BUILD_DIR)
+
+evaluate:
+	@mkdir -p $(BUILD_DIR)/evaluate
+	make -C /home/lorca/ysyx-workbench/yosys-sta sta \
+    DESIGN=EXU SDC_FILE=/home/lorca/ysyx-workbench/yosys-sta/scripts/default.sdc \
+    CLK_FREQ_MHZ=100 CLK_PORT_NAME=clock O=$(BUILD_DIR)/evaluate \
+    RTL_FILES="/home/lorca/ysyx-workbench/npc/vsrc/EXU.sv"
+
 include ../Makefile
 
 # Include rules for menuconfig

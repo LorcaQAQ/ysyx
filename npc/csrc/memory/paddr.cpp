@@ -6,6 +6,9 @@
 #include <isa.h>
 #include "svdpi.h"
 #include "VCore__Dpi.h"
+#ifdef CONFIG_DIFFTEST
+void difftest_skip_ref();
+#endif
 extern vluint64_t main_time;
 static const uint32_t img[]={
 0b00000000001100000000000010010011,//addi $ra,$$0,0x03
@@ -52,14 +55,21 @@ extern "C" int pmem_read(int addr) {
     if(addr==CONFIG_RTC_MMIO){//timer
       uint64_t us = get_time();
       uint32_t low=  (uint32_t)us;
-      // printf("low = %x\n", low);
+#ifdef CONFIG_DIFFTEST
+      difftest_skip_ref();
+#endif
       return low;
     }else if(addr==CONFIG_RTC_MMIO+4){
       uint64_t us = get_time();
       uint32_t high=  (uint32_t)(us>>32);
-      // printf("high = %x\n", high);
+#ifdef CONFIG_DIFFTEST
+      difftest_skip_ref();
+#endif
       return high;
     }else if (addr==CONFIG_SERIAL_MMIO) {
+#ifdef CONFIG_DIFFTEST
+      difftest_skip_ref();
+#endif
       return 0;
     }
   #endif
@@ -92,6 +102,9 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
   if(waddr==CONFIG_SERIAL_MMIO){//timer
     uint8_t ch= wdata & 0xff;
     putc(ch, stderr);
+#ifdef CONFIG_DIFFTEST
+    difftest_skip_ref();
+#endif
     return;
   }
   #endif
@@ -114,9 +127,9 @@ void init_mem() {
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 void display_mem_read(paddr_t addr){
-  printf("Memory read at " FMT_PADDR ", PC=" FMT_WORD"\n", addr, cpu.pc);
+ printf(ANSI_FMT("Memory read ",ANSI_FG_YELLOW)" At " FMT_PADDR ", PC=" FMT_WORD"\n", addr, top->io_pc);
 }
   
 void display_mem_write(paddr_t addr, word_t data){
-  printf("Memory write at " FMT_PADDR ", PC=" FMT_WORD", DATA is " FMT_WORD"\n", addr, cpu.pc,data);
+  printf(ANSI_FMT("Memory write",ANSI_FG_MAGENTA)" At " FMT_PADDR ", PC=" FMT_WORD", DATA is " FMT_WORD"\n", addr, top->io_pc,data);
 }

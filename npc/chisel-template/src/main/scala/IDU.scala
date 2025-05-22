@@ -28,7 +28,7 @@ class IDU extends Module {
     val jump_op = Output(UInt(JUMP_LEN.W))
 
     val mem_wen = Output(Bool())
-    val mem_valid = Output(Bool())
+    val mem_ren = Output(Bool())
     val load_store_range = Output(UInt(LOAD_LEN.W))
 
     val csr_r_w_ctrl=Output(UInt(CSR_R_W_CTRL_LEN.W))
@@ -116,8 +116,8 @@ class IDU extends Module {
     io.rf_wdata_sel := rf_wdata_sel
     io.jump_op := jump_op
 
-    io.mem_wen := (mem_op === MEM_WRITE)
-    io.mem_valid := (mem_op =/= MEM_X)
+    io.mem_wen := mem_op === MEM_WRITE
+    io.mem_ren := mem_op === MEM_READ
     io.load_store_range := load_store_range
 
     io.csr_r_w_addr := MuxCase(0.U, Array(

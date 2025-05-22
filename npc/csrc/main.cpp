@@ -204,6 +204,7 @@ static void exec_once(Decode *s)
 {
   s->pc = top->io_pc;
   s->snpc = top->io_pc + 4;
+  s->inst = top->io_instr;
   //top->io_instr = pmem_read((uint32_t)top->io_pc);
   #ifdef WAVE_DUMP
   single_cycle(top, contextp, wave);
@@ -341,9 +342,9 @@ void assert_fail_msg()
 
 int display_ftrace(Decode s, int n)
 {
-  if ((BITS(top->io_instr, 6, 0) == 0b1101111) || ((BITS(top->io_instr, 6, 0) == 0b1100111) && (BITS(top->io_instr, 14, 12) == 0b000)))
+  if ((BITS(s.inst, 6, 0) == 0b1101111) || ((BITS(s.inst, 6, 0) == 0b1100111) && (BITS(s.inst, 14, 12) == 0b000)))
   {
-    if (top->io_instr == 0x00008067)
+    if (s.inst == 0x00008067)
     { // ret
       n -= 1;
       for (int i = 0; i < func_cnt; i++)
@@ -352,7 +353,7 @@ int display_ftrace(Decode s, int n)
         {
           printf("%x:", s.pc);
           print_space(n);
-          printf("ret[%s@%x]\n", func_pool[i].name, s.dnpc);
+          printf(ANSI_FMT("Ret",ANSI_FG_MAGENTA)"[%s@%x]\n", func_pool[i].name, s.dnpc);
         }
       }
     }
@@ -364,14 +365,14 @@ int display_ftrace(Decode s, int n)
         {
           printf("%x:", s.pc);
           print_space(n);
-          printf("call [%s@0x%x]\n", func_pool[i].name, func_pool[i].addr);
+          printf(ANSI_FMT("Call",ANSI_FG_CYAN)"[%s@0x%x]\n", func_pool[i].name, func_pool[i].addr);
         }
       }
       n += 1;
     }
   }
 
-  return n;
+  return 0;
 }
 
 void print_space(int n)
