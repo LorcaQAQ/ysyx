@@ -2,23 +2,48 @@
 module IFU(
   input         clock,
                 reset,
-  input  [31:0] io_alu_pc,
-  input         io_jump_en,
-  output [31:0] io_pc,
-                io_snpc
+                io_in_from_wbu_valid,
+  input  [31:0] io_in_from_wbu_bits_dnpc,
+  output        io_out_valid,
+  output [31:0] io_out_bits_instr,
+                io_out_bits_pc,
+                io_out_bits_snpc,
+  output        io_finish
 );
 
-  reg  [31:0] pc;
-  wire [31:0] _snpc_T = pc + 32'h4;
+  reg [31:0] pc;
+  reg        valid_to_idu;
+  reg        state;
+  reg        finishReg;
+  reg        valid_in_from_wbu_reg0;
+  reg        valid_in_from_wbu_reg1;
   always @(posedge clock) begin
-    if (reset)
+    if (reset) begin
       pc <= 32'h80000000;
-    else if (io_jump_en)
-      pc <= io_alu_pc;
-    else
-      pc <= _snpc_T;
+      valid_to_idu <= 1'h1;
+      state <= 1'h0;
+      finishReg <= 1'h0;
+      valid_in_from_wbu_reg0 <= 1'h0;
+      valid_in_from_wbu_reg1 <= 1'h0;
+    end
+    else begin
+      if (io_in_from_wbu_valid)
+        pc <= io_in_from_wbu_bits_dnpc;
+      valid_to_idu <= ~state & (io_in_from_wbu_valid & ~state | valid_to_idu);
+      state <= ~state & valid_to_idu;
+      finishReg <= ~finishReg & valid_in_from_wbu_reg1 & ~valid_in_from_wbu_reg0;
+      valid_in_from_wbu_reg0 <= io_in_from_wbu_valid;
+      valid_in_from_wbu_reg1 <= valid_in_from_wbu_reg0;
+    end
   end // always @(posedge)
-  assign io_pc = pc;
-  assign io_snpc = _snpc_T;
+  instr_fetch instr_fetch (
+    .pc    (pc),
+    .reset (reset),
+    .instr (io_out_bits_instr)
+  );
+  assign io_out_valid = valid_to_idu;
+  assign io_out_bits_pc = pc;
+  assign io_out_bits_snpc = pc + 32'h4;
+  assign io_finish = finishReg;
 endmodule
 

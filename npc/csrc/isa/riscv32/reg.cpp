@@ -15,7 +15,7 @@ const char *regs[] = {
 void isa_reg_display() {
 	int count=sizeof(regs)/sizeof(regs[0]);
 	//set the scope to the register file
-	const svScope scope = svGetScopeFromName("TOP.Core.regfile.reg_display");
+	const svScope scope = svGetScopeFromName("TOP.Core.regs.reg_display");
   	assert(scope);  // Check for nullptr if scope not found
  	svSetScope(scope);
 	printf("---Print all the register---\n");

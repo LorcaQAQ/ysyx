@@ -158,7 +158,7 @@ void stop_simulation()
   contextp->gotFinish(true);
   npc_state.state = NPC_END;
   npc_state.halt_pc = top->io_pc;
-  const svScope scope_reg = svGetScopeFromName("TOP.Core.regfile.reg_display");
+  const svScope scope_reg = svGetScopeFromName("TOP.Core.regs.reg_display");
   assert(scope_reg); // Check for nullptr if scope not found
   svSetScope(scope_reg);
   npc_state.halt_ret = get_reg(10);
@@ -202,14 +202,21 @@ static void trace_and_difftest(Decode *_this, uint32_t dnpc)
 
 static void exec_once(Decode *s)
 {
+  bool run_once = false;
   s->pc = top->io_pc;
   s->snpc = top->io_pc + 4;
   s->inst = top->io_instr;
   //top->io_instr = pmem_read((uint32_t)top->io_pc);
   #ifdef WAVE_DUMP
-  single_cycle(top, contextp, wave);
+  while (top->io_finish == 0 || !run_once){
+    single_cycle(top, contextp, wave);
+    run_once = true ;
+  }
   #else
-  single_cycle(top, contextp);
+  while (top->io_finish == 0 || !run_once ){
+    single_cycle(top, contextp);
+    run_once = true ;
+  }
   #endif
   cpu_reg_update();
   s->dnpc = top->io_pc;
@@ -383,14 +390,14 @@ void print_space(int n)
 
 void cpu_reg_update()
 {
-  const svScope scope_reg = svGetScopeFromName("TOP.Core.regfile.reg_display");
+  const svScope scope_reg = svGetScopeFromName("TOP.Core.regs.reg_display");
   assert(scope_reg); // Check for nullptr if scope not found
   svSetScope(scope_reg);
   for(int i=0;i<NR_GPR;i++)
   {
     cpu.gpr[i]=get_reg(i);
   }
-  const svScope scope_csr = svGetScopeFromName("TOP.Core.csr.csr_display");
+  const svScope scope_csr = svGetScopeFromName("TOP.Core.regs.csr.csr_display");
   assert(scope_csr); // Check for nullptr if scope not found
   svSetScope(scope_csr);
   cpu.csr.mstatus=get_csr(0);

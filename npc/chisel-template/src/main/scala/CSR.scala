@@ -46,7 +46,8 @@ class CSRs(data_width : Int) extends Module {
   val io = IO(new Bundle {
     val pc =Input(UInt(data_width.W))
     val csr_w_data = Input(UInt(data_width.W))
-    val csr_addr = Input(UInt(12.W))
+    val csr_r_addr = Input(UInt(12.W))
+    val csr_w_addr = Input(UInt(12.W))
     val csr_r_w_ctrl = Input(UInt(CSR_R_W_CTRL_LEN.W))
     val csr_r_data = Output(UInt(data_width.W))
     val csr_pc = Output(UInt(data_width.W))
@@ -63,7 +64,15 @@ class CSRs(data_width : Int) extends Module {
 
   csr_display.io.csrfile :=csr_file.asUInt
 
-  val addr_map = MuxLookup(io.csr_addr, 0.U(2.W))(
+  val addr_r_map = MuxLookup(io.csr_r_addr, 0.U(2.W))(
+    Seq(
+      "h300".U -> 0.U(2.W),
+      "h305".U -> 1.U(2.W),
+      "h341".U -> 2.U(2.W),
+      "h342".U -> 3.U(2.W)
+    )
+  )
+  val addr_w_map = MuxLookup(io.csr_w_addr, 0.U(2.W))(
     Seq(
       "h300".U -> 0.U(2.W),
       "h305".U -> 1.U(2.W),
@@ -72,6 +81,10 @@ class CSRs(data_width : Int) extends Module {
     )
   )
   val csr_wen = (io.csr_r_w_ctrl=== CSR_R_W_EN)
+
+  val csr_mret_wen = (io.csr_r_w_ctrl=== CSR_MRET)
+  val csr_mret_wen_reg0 = RegNext(csr_mret_wen)
+  val csr_mret_wen_pos = csr_mret_wen && !csr_mret_wen_reg0
 
   val mstatus =csr_file(0)
   val mstatus_ecall = (mstatus & 
@@ -87,17 +100,17 @@ class CSRs(data_width : Int) extends Module {
                    (~(0x3.U << 11).asUInt)
 
   when(io.csr_r_w_ctrl=== CSR_R_W_EN){
-    csr_file(addr_map) := io.csr_w_data
+    csr_file(addr_w_map) := io.csr_w_data
   }.elsewhen(io.csr_r_w_ctrl=== CSR_ECALL){
     csr_file(0) := mstatus_ecall
     csr_file(2) :=io.pc
     csr_file(3) :=11.U
-  }.elsewhen(io.csr_r_w_ctrl===CSR_MRET){
+  }.elsewhen(csr_mret_wen_pos){
     csr_file(0) :=mstatus_mret
   }
 
 
-  io.csr_r_data := csr_file(addr_map)
+  io.csr_r_data := csr_file(addr_r_map)
 
   io.csr_pc := MuxCase(0.U, Array(
     (io.csr_r_w_ctrl=== CSR_ECALL) -> csr_file(1),

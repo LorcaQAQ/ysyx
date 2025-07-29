@@ -4,158 +4,218 @@ module Core(
                 reset,
   output [31:0] io_instr,
                 io_pc,
-                io_result
+                io_result,
+  output        io_finish
 );
 
-  wire [31:0]      _csr_io_csr_r_data;
-  wire [31:0]      _csr_io_csr_pc;
-  wire [31:0]      _mem_mem_rdata;
-  wire [31:0]      _instr_fetch_instr;
-  wire [31:0]      _regfile_io_rdata1;
-  wire [31:0]      _regfile_io_rdata2;
-  wire [31:0]      _exu_io_result;
-  wire [31:0]      _exu_io_csr_result;
-  wire [4:0]       _idu_io_rs1;
-  wire [4:0]       _idu_io_rs2;
-  wire [4:0]       _idu_io_rd;
-  wire [31:0]      _idu_io_imm;
-  wire             _idu_io_rf_wen;
-  wire [2:0]       _idu_io_rf_wdata_sel;
-  wire [2:0]       _idu_io_alu_op1_sel;
-  wire [2:0]       _idu_io_alu_op2_sel;
-  wire [4:0]       _idu_io_alu_op;
-  wire [1:0]       _idu_io_jump_op;
-  wire             _idu_io_mem_wen;
-  wire             _idu_io_mem_ren;
-  wire [2:0]       _idu_io_load_store_range;
-  wire [1:0]       _idu_io_csr_r_w_ctrl;
-  wire [11:0]      _idu_io_csr_r_w_addr;
-  wire [2:0]       _idu_io_csr_alu_op;
-  wire [31:0]      _ifu_io_pc;
-  wire [31:0]      _ifu_io_snpc;
-  wire             branch_en =
-    _idu_io_jump_op == 2'h2 & _exu_io_result == 32'h0
-    & (_idu_io_alu_op == 5'h4 | _idu_io_alu_op == 5'hB | _idu_io_alu_op == 5'hC
-       | _idu_io_alu_op == 5'hE | _idu_io_alu_op == 5'hF | _idu_io_alu_op == 5'h11);
-  wire [3:0][31:0] _GEN =
-    {{_csr_io_csr_pc},
-     {branch_en ? _ifu_io_pc + _idu_io_imm : _ifu_io_pc},
-     {_exu_io_result},
-     {_ifu_io_pc}};
-  wire             _mem_io_mem_wmask_T = _idu_io_load_store_range == 3'h1;
-  wire             _mem_io_mem_wmask_T_3 = _idu_io_load_store_range == 3'h2;
-  wire             _mem_io_mem_wmask_T_1 = _idu_io_load_store_range == 3'h3;
-  wire [7:0][31:0] _GEN_0 =
-    {{32'h0},
-     {32'h0},
-     {{{24{_mem_mem_rdata[7]}}, _mem_mem_rdata[7:0]}},
-     {{{16{_mem_mem_rdata[15]}}, _mem_mem_rdata[15:0]}},
-     {{16'h0, _mem_mem_rdata[15:0]}},
-     {{24'h0, _mem_mem_rdata[7:0]}},
-     {_mem_mem_rdata},
-     {32'h0}};
-  wire             _exu_io_val1_T = _idu_io_alu_op1_sel == 3'h0;
-  wire [31:0]      io_result_0 =
-    _exu_io_val1_T | _idu_io_alu_op1_sel == 3'h1
-      ? _regfile_io_rdata1
-      : _idu_io_alu_op1_sel == 3'h2 ? _ifu_io_pc : 32'h0;
+  wire        _mem_io_out_valid;
+  wire [4:0]  _mem_io_out_bits_alu_op;
+  wire        _mem_io_out_bits_rf_wen;
+  wire [2:0]  _mem_io_out_bits_rf_wdata_sel;
+  wire [4:0]  _mem_io_out_bits_rd_addr;
+  wire [31:0] _mem_io_out_bits_result;
+  wire [31:0] _mem_io_out_bits_mem_rdata;
+  wire [31:0] _mem_io_out_bits_snpc;
+  wire [31:0] _mem_io_out_bits_pc;
+  wire [31:0] _mem_io_out_bits_csr_r_w_addr;
+  wire [31:0] _mem_io_out_bits_csr_result;
+  wire [1:0]  _mem_io_out_bits_csr_r_w_ctrl;
+  wire [31:0] _mem_io_out_bits_imm;
+  wire [1:0]  _mem_io_out_bits_jump_op;
+  wire [31:0] _regs_io_out_regfile_to_exu_rs1;
+  wire [31:0] _regs_io_out_regfile_to_exu_rs2;
+  wire [31:0] _regs_io_out_csr_to_exu_csr;
+  wire        _regs_io_out_to_ifu_valid;
+  wire [31:0] _regs_io_out_to_ifu_bits_dnpc;
+  wire        _exu_io_out_valid;
+  wire [4:0]  _exu_io_out_bits_alu_op;
+  wire [2:0]  _exu_io_out_bits_rf_wdata_sel;
+  wire        _exu_io_out_bits_rf_wen;
+  wire [31:0] _exu_io_out_bits_rd_addr;
+  wire [31:0] _exu_io_out_bits_result;
+  wire [2:0]  _exu_io_out_bits_load_store_range;
+  wire        _exu_io_out_bits_mem_wen;
+  wire        _exu_io_out_bits_mem_ren;
+  wire [31:0] _exu_io_out_bits_rs2;
+  wire [31:0] _exu_io_out_bits_snpc;
+  wire [31:0] _exu_io_out_bits_pc;
+  wire [31:0] _exu_io_out_bits_imm;
+  wire [1:0]  _exu_io_out_bits_jump_op;
+  wire [31:0] _exu_io_out_bits_csr_result;
+  wire [11:0] _exu_io_out_bits_csr_r_w_addr;
+  wire [1:0]  _exu_io_out_bits_csr_r_w_ctrl;
+  wire [11:0] _idu_io_out_to_csr_csr_r_addr;
+  wire [4:0]  _idu_io_out_to_regfile_rs1_addr;
+  wire [4:0]  _idu_io_out_to_regfile_rs2_addr;
+  wire        _idu_io_out_to_exu_valid;
+  wire [4:0]  _idu_io_out_to_exu_bits_alu_op;
+  wire [2:0]  _idu_io_out_to_exu_bits_alu_op1_sel;
+  wire [2:0]  _idu_io_out_to_exu_bits_alu_op2_sel;
+  wire [2:0]  _idu_io_out_to_exu_bits_rf_wdata_sel;
+  wire        _idu_io_out_to_exu_bits_rf_wen;
+  wire [31:0] _idu_io_out_to_exu_bits_imm;
+  wire [4:0]  _idu_io_out_to_exu_bits_rd_addr;
+  wire        _idu_io_out_to_exu_bits_mem_wen;
+  wire        _idu_io_out_to_exu_bits_mem_ren;
+  wire [11:0] _idu_io_out_to_exu_bits_csr_r_w_addr;
+  wire [1:0]  _idu_io_out_to_exu_bits_csr_r_w_ctrl;
+  wire [31:0] _idu_io_out_to_exu_bits_pc;
+  wire [31:0] _idu_io_out_to_exu_bits_snpc;
+  wire [1:0]  _idu_io_out_to_exu_bits_jump_op;
+  wire [2:0]  _idu_io_out_to_exu_bits_load_store_range;
+  wire [2:0]  _idu_io_out_to_exu_bits_csr_alu_op;
+  wire        _ifu_io_out_valid;
+  wire [31:0] _ifu_io_out_bits_instr;
+  wire [31:0] _ifu_io_out_bits_pc;
+  wire [31:0] _ifu_io_out_bits_snpc;
+  wire        _ifu_io_finish;
   IFU ifu (
-    .clock      (clock),
-    .reset      (reset),
-    .io_alu_pc  (_GEN[_idu_io_jump_op]),
-    .io_jump_en (_idu_io_jump_op == 2'h1 | (&_idu_io_jump_op) | branch_en),
-    .io_pc      (_ifu_io_pc),
-    .io_snpc    (_ifu_io_snpc)
+    .clock                    (clock),
+    .reset                    (reset),
+    .io_in_from_wbu_valid     (_regs_io_out_to_ifu_valid),
+    .io_in_from_wbu_bits_dnpc (_regs_io_out_to_ifu_bits_dnpc),
+    .io_out_valid             (_ifu_io_out_valid),
+    .io_out_bits_instr        (_ifu_io_out_bits_instr),
+    .io_out_bits_pc           (_ifu_io_out_bits_pc),
+    .io_out_bits_snpc         (_ifu_io_out_bits_snpc),
+    .io_finish                (_ifu_io_finish)
   );
   IDU idu (
-    .io_instr            (_instr_fetch_instr),
-    .io_rs1              (_idu_io_rs1),
-    .io_rs2              (_idu_io_rs2),
-    .io_rd               (_idu_io_rd),
-    .io_imm              (_idu_io_imm),
-    .io_rf_wen           (_idu_io_rf_wen),
-    .io_rf_wdata_sel     (_idu_io_rf_wdata_sel),
-    .io_alu_op1_sel      (_idu_io_alu_op1_sel),
-    .io_alu_op2_sel      (_idu_io_alu_op2_sel),
-    .io_alu_op           (_idu_io_alu_op),
-    .io_jump_op          (_idu_io_jump_op),
-    .io_mem_wen          (_idu_io_mem_wen),
-    .io_mem_ren          (_idu_io_mem_ren),
-    .io_load_store_range (_idu_io_load_store_range),
-    .io_csr_r_w_ctrl     (_idu_io_csr_r_w_ctrl),
-    .io_csr_r_w_addr     (_idu_io_csr_r_w_addr),
-    .io_csr_alu_op       (_idu_io_csr_alu_op)
+    .clock                               (clock),
+    .reset                               (reset),
+    .io_in_from_ifu_valid                (_ifu_io_out_valid),
+    .io_in_from_ifu_bits_instr           (_ifu_io_out_bits_instr),
+    .io_in_from_ifu_bits_pc              (_ifu_io_out_bits_pc),
+    .io_in_from_ifu_bits_snpc            (_ifu_io_out_bits_snpc),
+    .io_out_to_csr_csr_r_addr            (_idu_io_out_to_csr_csr_r_addr),
+    .io_out_to_regfile_rs1_addr          (_idu_io_out_to_regfile_rs1_addr),
+    .io_out_to_regfile_rs2_addr          (_idu_io_out_to_regfile_rs2_addr),
+    .io_out_to_exu_valid                 (_idu_io_out_to_exu_valid),
+    .io_out_to_exu_bits_alu_op           (_idu_io_out_to_exu_bits_alu_op),
+    .io_out_to_exu_bits_alu_op1_sel      (_idu_io_out_to_exu_bits_alu_op1_sel),
+    .io_out_to_exu_bits_alu_op2_sel      (_idu_io_out_to_exu_bits_alu_op2_sel),
+    .io_out_to_exu_bits_rf_wdata_sel     (_idu_io_out_to_exu_bits_rf_wdata_sel),
+    .io_out_to_exu_bits_rf_wen           (_idu_io_out_to_exu_bits_rf_wen),
+    .io_out_to_exu_bits_imm              (_idu_io_out_to_exu_bits_imm),
+    .io_out_to_exu_bits_rd_addr          (_idu_io_out_to_exu_bits_rd_addr),
+    .io_out_to_exu_bits_mem_wen          (_idu_io_out_to_exu_bits_mem_wen),
+    .io_out_to_exu_bits_mem_ren          (_idu_io_out_to_exu_bits_mem_ren),
+    .io_out_to_exu_bits_csr_r_w_addr     (_idu_io_out_to_exu_bits_csr_r_w_addr),
+    .io_out_to_exu_bits_csr_r_w_ctrl     (_idu_io_out_to_exu_bits_csr_r_w_ctrl),
+    .io_out_to_exu_bits_pc               (_idu_io_out_to_exu_bits_pc),
+    .io_out_to_exu_bits_snpc             (_idu_io_out_to_exu_bits_snpc),
+    .io_out_to_exu_bits_jump_op          (_idu_io_out_to_exu_bits_jump_op),
+    .io_out_to_exu_bits_load_store_range (_idu_io_out_to_exu_bits_load_store_range),
+    .io_out_to_exu_bits_csr_alu_op       (_idu_io_out_to_exu_bits_csr_alu_op)
   );
   EXU exu (
-    .io_alu_op     (_idu_io_alu_op),
-    .io_val1       (io_result_0),
-    .io_val2
-      (_idu_io_alu_op2_sel == 3'h5 | _idu_io_alu_op2_sel == 3'h0
-         ? _regfile_io_rdata2
-         : _idu_io_alu_op2_sel == 3'h1 | _idu_io_alu_op2_sel == 3'h2
-           | _idu_io_alu_op2_sel == 3'h3 | _idu_io_alu_op2_sel == 3'h4
-             ? _idu_io_imm
-             : _idu_io_alu_op2_sel == 3'h6 ? _csr_io_csr_r_data : 32'h0),
-    .io_result     (_exu_io_result),
-    .io_csr_alu_op (_idu_io_csr_alu_op),
-    .io_csr_result (_exu_io_csr_result)
+    .clock                                (clock),
+    .reset                                (reset),
+    .io_in_from_idu_valid                 (_idu_io_out_to_exu_valid),
+    .io_in_from_idu_bits_alu_op           (_idu_io_out_to_exu_bits_alu_op),
+    .io_in_from_idu_bits_alu_op1_sel      (_idu_io_out_to_exu_bits_alu_op1_sel),
+    .io_in_from_idu_bits_alu_op2_sel      (_idu_io_out_to_exu_bits_alu_op2_sel),
+    .io_in_from_idu_bits_rf_wdata_sel     (_idu_io_out_to_exu_bits_rf_wdata_sel),
+    .io_in_from_idu_bits_rf_wen           (_idu_io_out_to_exu_bits_rf_wen),
+    .io_in_from_idu_bits_imm              (_idu_io_out_to_exu_bits_imm),
+    .io_in_from_idu_bits_rd_addr          (_idu_io_out_to_exu_bits_rd_addr),
+    .io_in_from_idu_bits_mem_wen          (_idu_io_out_to_exu_bits_mem_wen),
+    .io_in_from_idu_bits_mem_ren          (_idu_io_out_to_exu_bits_mem_ren),
+    .io_in_from_idu_bits_csr_r_w_addr     (_idu_io_out_to_exu_bits_csr_r_w_addr),
+    .io_in_from_idu_bits_csr_r_w_ctrl     (_idu_io_out_to_exu_bits_csr_r_w_ctrl),
+    .io_in_from_idu_bits_pc               (_idu_io_out_to_exu_bits_pc),
+    .io_in_from_idu_bits_snpc             (_idu_io_out_to_exu_bits_snpc),
+    .io_in_from_idu_bits_jump_op          (_idu_io_out_to_exu_bits_jump_op),
+    .io_in_from_idu_bits_load_store_range (_idu_io_out_to_exu_bits_load_store_range),
+    .io_in_from_idu_bits_csr_alu_op       (_idu_io_out_to_exu_bits_csr_alu_op),
+    .io_in_from_regfile_rs1               (_regs_io_out_regfile_to_exu_rs1),
+    .io_in_from_regfile_rs2               (_regs_io_out_regfile_to_exu_rs2),
+    .io_in_from_csr_csr                   (_regs_io_out_csr_to_exu_csr),
+    .io_out_valid                         (_exu_io_out_valid),
+    .io_out_bits_alu_op                   (_exu_io_out_bits_alu_op),
+    .io_out_bits_rf_wdata_sel             (_exu_io_out_bits_rf_wdata_sel),
+    .io_out_bits_rf_wen                   (_exu_io_out_bits_rf_wen),
+    .io_out_bits_rd_addr                  (_exu_io_out_bits_rd_addr),
+    .io_out_bits_result                   (_exu_io_out_bits_result),
+    .io_out_bits_load_store_range         (_exu_io_out_bits_load_store_range),
+    .io_out_bits_mem_wen                  (_exu_io_out_bits_mem_wen),
+    .io_out_bits_mem_ren                  (_exu_io_out_bits_mem_ren),
+    .io_out_bits_rs2                      (_exu_io_out_bits_rs2),
+    .io_out_bits_snpc                     (_exu_io_out_bits_snpc),
+    .io_out_bits_pc                       (_exu_io_out_bits_pc),
+    .io_out_bits_imm                      (_exu_io_out_bits_imm),
+    .io_out_bits_jump_op                  (_exu_io_out_bits_jump_op),
+    .io_out_bits_csr_result               (_exu_io_out_bits_csr_result),
+    .io_out_bits_csr_r_w_addr             (_exu_io_out_bits_csr_r_w_addr),
+    .io_out_bits_csr_r_w_ctrl             (_exu_io_out_bits_csr_r_w_ctrl)
   );
-  RegFile regfile (
-    .clock     (clock),
-    .io_wdata
-      (_idu_io_rf_wdata_sel == 3'h1
-         ? _exu_io_result
-         : _idu_io_rf_wdata_sel == 3'h2
-             ? _ifu_io_snpc
-             : _idu_io_rf_wdata_sel == 3'h3 ? _GEN_0[_idu_io_load_store_range] : 32'h0),
-    .io_waddr  (_idu_io_rd[3:0]),
-    .io_wen    (_idu_io_rf_wen),
-    .io_raddr1 (_exu_io_val1_T ? 4'h0 : _idu_io_rs1[3:0]),
-    .io_raddr2 (_idu_io_rs2[3:0]),
-    .io_rdata1 (_regfile_io_rdata1),
-    .io_rdata2 (_regfile_io_rdata2)
+  Reg_CSR regs (
+    .clock                            (clock),
+    .reset                            (reset),
+    .io_in_idu_to_regfile_rs1_addr    (_idu_io_out_to_regfile_rs1_addr),
+    .io_in_idu_to_regfile_rs2_addr    (_idu_io_out_to_regfile_rs2_addr),
+    .io_in_idu_to_csr_csr_r_addr      (_idu_io_out_to_csr_csr_r_addr),
+    .io_out_regfile_to_exu_rs1        (_regs_io_out_regfile_to_exu_rs1),
+    .io_out_regfile_to_exu_rs2        (_regs_io_out_regfile_to_exu_rs2),
+    .io_out_csr_to_exu_csr            (_regs_io_out_csr_to_exu_csr),
+    .io_in_from_mem_valid             (_mem_io_out_valid),
+    .io_in_from_mem_bits_alu_op       (_mem_io_out_bits_alu_op),
+    .io_in_from_mem_bits_rf_wen       (_mem_io_out_bits_rf_wen),
+    .io_in_from_mem_bits_rf_wdata_sel (_mem_io_out_bits_rf_wdata_sel),
+    .io_in_from_mem_bits_rd_addr      (_mem_io_out_bits_rd_addr),
+    .io_in_from_mem_bits_result       (_mem_io_out_bits_result),
+    .io_in_from_mem_bits_mem_rdata    (_mem_io_out_bits_mem_rdata),
+    .io_in_from_mem_bits_snpc         (_mem_io_out_bits_snpc),
+    .io_in_from_mem_bits_pc           (_mem_io_out_bits_pc),
+    .io_in_from_mem_bits_csr_r_w_addr (_mem_io_out_bits_csr_r_w_addr),
+    .io_in_from_mem_bits_csr_result   (_mem_io_out_bits_csr_result),
+    .io_in_from_mem_bits_csr_r_w_ctrl (_mem_io_out_bits_csr_r_w_ctrl),
+    .io_in_from_mem_bits_imm          (_mem_io_out_bits_imm),
+    .io_in_from_mem_bits_jump_op      (_mem_io_out_bits_jump_op),
+    .io_out_to_ifu_valid              (_regs_io_out_to_ifu_valid),
+    .io_out_to_ifu_bits_dnpc          (_regs_io_out_to_ifu_bits_dnpc)
+  );
+  mem_wrapper mem (
+    .clock                                (clock),
+    .reset                                (reset),
+    .io_in_from_exu_valid                 (_exu_io_out_valid),
+    .io_in_from_exu_bits_alu_op           (_exu_io_out_bits_alu_op),
+    .io_in_from_exu_bits_rf_wdata_sel     (_exu_io_out_bits_rf_wdata_sel),
+    .io_in_from_exu_bits_rf_wen           (_exu_io_out_bits_rf_wen),
+    .io_in_from_exu_bits_rd_addr          (_exu_io_out_bits_rd_addr),
+    .io_in_from_exu_bits_result           (_exu_io_out_bits_result),
+    .io_in_from_exu_bits_load_store_range (_exu_io_out_bits_load_store_range),
+    .io_in_from_exu_bits_mem_wen          (_exu_io_out_bits_mem_wen),
+    .io_in_from_exu_bits_mem_ren          (_exu_io_out_bits_mem_ren),
+    .io_in_from_exu_bits_rs2              (_exu_io_out_bits_rs2),
+    .io_in_from_exu_bits_snpc             (_exu_io_out_bits_snpc),
+    .io_in_from_exu_bits_pc               (_exu_io_out_bits_pc),
+    .io_in_from_exu_bits_imm              (_exu_io_out_bits_imm),
+    .io_in_from_exu_bits_jump_op          (_exu_io_out_bits_jump_op),
+    .io_in_from_exu_bits_csr_result       (_exu_io_out_bits_csr_result),
+    .io_in_from_exu_bits_csr_r_w_addr     (_exu_io_out_bits_csr_r_w_addr),
+    .io_in_from_exu_bits_csr_r_w_ctrl     (_exu_io_out_bits_csr_r_w_ctrl),
+    .io_out_valid                         (_mem_io_out_valid),
+    .io_out_bits_alu_op                   (_mem_io_out_bits_alu_op),
+    .io_out_bits_rf_wen                   (_mem_io_out_bits_rf_wen),
+    .io_out_bits_rf_wdata_sel             (_mem_io_out_bits_rf_wdata_sel),
+    .io_out_bits_rd_addr                  (_mem_io_out_bits_rd_addr),
+    .io_out_bits_result                   (_mem_io_out_bits_result),
+    .io_out_bits_mem_rdata                (_mem_io_out_bits_mem_rdata),
+    .io_out_bits_snpc                     (_mem_io_out_bits_snpc),
+    .io_out_bits_pc                       (_mem_io_out_bits_pc),
+    .io_out_bits_csr_r_w_addr             (_mem_io_out_bits_csr_r_w_addr),
+    .io_out_bits_csr_result               (_mem_io_out_bits_csr_result),
+    .io_out_bits_csr_r_w_ctrl             (_mem_io_out_bits_csr_r_w_ctrl),
+    .io_out_bits_imm                      (_mem_io_out_bits_imm),
+    .io_out_bits_jump_op                  (_mem_io_out_bits_jump_op)
   );
   get_instruction get_instruction (
-    .instr (_instr_fetch_instr)
+    .instr (_ifu_io_finish ? _ifu_io_out_bits_instr : 32'h0)
   );
-  instr_fetch instr_fetch (
-    .pc    (_ifu_io_pc),
-    .reset (reset),
-    .instr (_instr_fetch_instr)
-  );
-  MEM #(
-    .DATA_WIDTH(32)
-  ) mem (
-    .clk       (clock),
-    .mem_ren   (_idu_io_mem_ren),
-    .mem_wen   (_idu_io_mem_wen),
-    .mem_waddr (_exu_io_result),
-    .mem_wdata
-      (_mem_io_mem_wmask_T
-         ? _regfile_io_rdata2
-         : _mem_io_mem_wmask_T_1
-             ? {16'h0, _regfile_io_rdata2[15:0]}
-             : _mem_io_mem_wmask_T_3 ? {24'h0, _regfile_io_rdata2[7:0]} : 32'h0),
-    .mem_rdata (_mem_mem_rdata),
-    .mem_raddr (_exu_io_result),
-    .mem_wmask
-      ({4'h0,
-        _mem_io_mem_wmask_T
-          ? 4'hF
-          : {2'h0, _mem_io_mem_wmask_T_1 ? 2'h3 : {1'h0, _mem_io_mem_wmask_T_3}}})
-  );
-  CSRs csr (
-    .clock           (clock),
-    .reset           (reset),
-    .io_pc           (_ifu_io_pc),
-    .io_csr_w_data   (_exu_io_csr_result),
-    .io_csr_addr     (_idu_io_csr_r_w_addr),
-    .io_csr_r_w_ctrl (_idu_io_csr_r_w_ctrl),
-    .io_csr_r_data   (_csr_io_csr_r_data),
-    .io_csr_pc       (_csr_io_csr_pc)
-  );
-  assign io_instr = _instr_fetch_instr;
-  assign io_pc = _ifu_io_pc;
-  assign io_result = io_result_0;
+  assign io_instr = _ifu_io_out_bits_instr;
+  assign io_pc = _ifu_io_out_bits_pc;
+  assign io_result = _exu_io_out_bits_result;
+  assign io_finish = _ifu_io_finish;
 endmodule
 

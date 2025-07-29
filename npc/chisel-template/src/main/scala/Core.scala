@@ -14,6 +14,7 @@ import instructions.RV32I._
 import mem._
 import consts.Consts._
 import csr._
+import iobundle._
 /* 
 class ebreak extends HasBlackBoxInline {
   val io = IO(new Bundle {
@@ -81,127 +82,49 @@ class instr_fetch extends HasBlackBoxInline {
     |endmodule
     """.stripMargin)
 }
+
 class Core extends Module {
   val io = IO(new Bundle {
-    val instr   = Output(UInt(32.W))
-    val pc   = Output(UInt(32.W))
-    val result = Output(UInt(32.W))
-  })
+        val instr   = Output(UInt(32.W))
+        val pc   = Output(UInt(32.W))
+        val result = Output(UInt(32.W))
+        val finish = Output(Bool())
+      })
+  
+  val ifu = Module(new IFU)
+  val idu = Module(new IDU)
+  val exu = Module(new EXU)
+  val regs = Module(new Reg_CSR(32,4))
+  val mem = Module(new mem_wrapper)
+  val get_instruction = Module(new get_instruction)
 
-    val ifu = Module(new IFU)
-    val idu = Module(new IDU)
-    val exu = Module(new EXU)
-    val regfile = Module(new RegFile(32,4))
-    val get_instruction = Module(new get_instruction)
-    val instr_fetch = Module(new instr_fetch)
-    val mem = Module(new MEM(32))
-    val csr =Module(new CSRs(32))
+  ifu.io.out <> idu.io.in_from_ifu
+  idu.io.out_to_exu <> exu.io.in_from_idu
+  idu.io.out_to_regfile <> regs.io.in_idu_to_regfile
+  idu.io.out_to_csr <> regs.io.in_idu_to_csr
+  exu.io.in_from_regfile <> regs.io.out_regfile_to_exu
+  exu.io.in_from_csr <> regs.io.out_csr_to_exu
+  exu.io.out<> mem.io.in_from_exu
+  mem.io.out <> regs.io.in_from_mem
+  regs.io.out_to_ifu <> ifu.io.in_from_wbu
 
-    get_instruction.io.instr := io.instr
+  get_instruction.io.instr := Mux(ifu.io.finish, ifu.io.out.bits.instr, 0.U)
+  
 
-    instr_fetch.io.reset := reset
-    instr_fetch.io.pc := ifu.io.pc
-    io.instr := instr_fetch.io.instr
+  io.instr := ifu.io.out.bits.instr
+  io.pc := ifu.io.out.bits.pc
+  io.result := exu.io.out.bits.result
 
-    io.pc := ifu.io.pc
-    
-    //jump logic/branch logic
-    val jal_en = (idu.io.jump_op === JUMP) || (idu.io.jump_op === JUMP_CSR)
-    val branch_en = idu.io.jump_op === JUMP_COND&&
-                    exu.io.result === 0.U &&
-                    ( idu.io.alu_op ===ALU_BNE  ||   
-                      idu.io.alu_op ===ALU_BGE  ||
-                      idu.io.alu_op ===ALU_BEQ  ||
-                      idu.io.alu_op ===ALU_BGEU ||
-                      idu.io.alu_op ===ALU_BLTU ||
-                      idu.io.alu_op ===ALU_BLT  )
-
-    ifu.io.alu_pc :=  MuxCase(ifu.io.pc, Array(
-      (idu.io.jump_op === JUMP) -> exu.io.result,
-      (idu.io.jump_op === NO_JUMP) -> ifu.io.pc,
-      (idu.io.jump_op === JUMP_COND) -> Mux(branch_en , ifu.io.pc+idu.io.imm, ifu.io.pc),
-      (idu.io.jump_op === JUMP_CSR) -> csr.io.csr_pc
-    ))
-    ifu.io.jump_en := jal_en|| branch_en
-    //IDU IO
-    idu.io.instr := io.instr
-
-    val load_store_range =Wire(UInt(LOAD_LEN.W))
-    load_store_range := idu.io.load_store_range
-
-    val mem_rdata = Wire(UInt(32.W))
-    mem_rdata := MuxCase(0.U, Array(
-      (load_store_range === Word) ->  mem.io.mem_rdata,
-      (load_store_range === BYTE_U) ->  Cat(Fill(24,0.U),mem.io.mem_rdata(7,0)),
-      (load_store_range === Half_U) ->  Cat(Fill(16,0.U),mem.io.mem_rdata(15,0)),
-      (load_store_range === Half_S) ->  Cat(Fill(16,mem.io.mem_rdata(15)),mem.io.mem_rdata(15,0)),
-      (load_store_range === BYTE_S) ->  Cat(Fill(24,mem.io.mem_rdata(7)),mem.io.mem_rdata(7,0))
-    ))  
-    //regfile IO
-    regfile.io.waddr := idu.io.rd
-    regfile.io.wdata := MuxCase(0.U, Array(
-      (idu.io.rf_wdata_sel === REG_DATA_ALU) -> exu.io.result,
-      (idu.io.rf_wdata_sel === REG_DATA_PC) -> ifu.io.snpc,
-      (idu.io.rf_wdata_sel === REG_DATA_MEM) -> mem_rdata
-    ))
-    regfile.io.wen := idu.io.rf_wen
-    regfile.io.raddr1 := Mux(idu.io.alu_op1_sel===OP1_X,0.U,idu.io.rs1)
-    regfile.io.raddr2 := idu.io.rs2
- 
-    
-    //EXU IO
-    exu.io.alu_op := idu.io.alu_op
-    exu.io.csr_alu_op :=idu.io.csr_alu_op
-    exu.io.val1 := MuxCase(0.U, Array(
-      (idu.io.alu_op1_sel === OP1_X) -> regfile.io.rdata1,
-      (idu.io.alu_op1_sel === OP1_RS1) -> regfile.io.rdata1,
-      (idu.io.alu_op1_sel === OP1_PC) -> ifu.io.pc
-    ))
-    exu.io.val2 := MuxCase(0.U, Array(
-      (idu.io.alu_op2_sel === OP2_RS2_IMMB) -> regfile.io.rdata2,
-      (idu.io.alu_op2_sel === OP2_RS2) -> regfile.io.rdata2,
-      (idu.io.alu_op2_sel === OP2_IMMI) -> idu.io.imm,
-      (idu.io.alu_op2_sel === OP2_IMMU) -> idu.io.imm,
-      (idu.io.alu_op2_sel === OP2_IMMJ) -> idu.io.imm,
-      (idu.io.alu_op2_sel === OP2_IMMS) -> idu.io.imm,
-      (idu.io.alu_op2_sel === OP2_CSR) -> csr.io.csr_r_data,
-
-    ))
-
-    //MEM IO
-    val mem_wdata = Wire(UInt(32.W))
-    mem_wdata := MuxCase(0.U, Array(
-      (load_store_range === Word) -> regfile.io.rdata2,
-      (load_store_range === Half_U) -> Cat(Fill(16,0.U),regfile.io.rdata2(15,0)),
-      (load_store_range === BYTE_U) -> Cat(Fill(24,0.U),regfile.io.rdata2(7,0))
-    ))
-    mem.io.mem_ren := idu.io.mem_ren
-    mem.io.mem_wen := idu.io.mem_wen
-    mem.io.mem_waddr := exu.io.result
-    mem.io.mem_wdata := mem_wdata
-    mem.io.mem_raddr := exu.io.result
-    mem.io.mem_wmask := MuxCase(0.U, Array(
-      (load_store_range === Word) -> "h0f".U,
-      (load_store_range === Half_U) -> "h03".U,
-      (load_store_range === BYTE_U) -> "h01".U
-    ))
-    mem.io.clk := clock
-    io.result := exu.io.val1 
-
-    csr.io.csr_w_data := exu.io.csr_result
-    csr.io.csr_addr := idu.io.csr_r_w_addr
-    csr.io.csr_r_w_ctrl := idu.io.csr_r_w_ctrl
-    csr.io.pc := ifu.io.pc
+  io.finish := ifu.io.finish
 }
-
 /**
  * Generate Verilog sources and save it in file GCD.v
  */
 object CoreMain extends App {
   ChiselStage.emitSystemVerilogFile(
     new Core,
-    firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info", "-o=../vsrc", "--split-verilog")
+    firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info", "-o=../vsrc", "--split-verilog","--lowering-options=disallowLocalVariables, disallowPackedArrays,locationInfoStyle=wrapInAtSquareBracket")
   )
-}
+  }
 
 

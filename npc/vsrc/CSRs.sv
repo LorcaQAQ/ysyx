@@ -4,21 +4,38 @@ module CSRs(
                 reset,
   input  [31:0] io_pc,
                 io_csr_w_data,
-  input  [11:0] io_csr_addr,
+  input  [11:0] io_csr_r_addr,
+                io_csr_w_addr,
   input  [1:0]  io_csr_r_w_ctrl,
   output [31:0] io_csr_r_data,
                 io_csr_pc
 );
 
-  reg  [31:0]      csr_file_0;
-  reg  [31:0]      csr_file_1;
-  reg  [31:0]      csr_file_2;
-  reg  [31:0]      csr_file_3;
-  wire [1:0]       addr_map =
-    io_csr_addr == 12'h342
+  reg  [31:0] csr_file_0;
+  reg  [31:0] csr_file_1;
+  reg  [31:0] csr_file_2;
+  reg  [31:0] csr_file_3;
+  reg         csr_mret_wen_reg0;
+  reg  [31:0] casez_tmp;
+  always_comb begin
+    casez (io_csr_r_addr == 12'h342
+             ? 2'h3
+             : io_csr_r_addr == 12'h341 ? 2'h2 : {1'h0, io_csr_r_addr == 12'h305})
+      2'b00:
+        casez_tmp = csr_file_0;
+      2'b01:
+        casez_tmp = csr_file_1;
+      2'b10:
+        casez_tmp = csr_file_2;
+      default:
+        casez_tmp = csr_file_3;
+    endcase
+  end // always_comb
+  wire [1:0]  addr_w_map =
+    io_csr_w_addr == 12'h342
       ? 2'h3
-      : io_csr_addr == 12'h341 ? 2'h2 : {1'h0, io_csr_addr == 12'h305};
-  wire [3:0][31:0] _GEN = {{csr_file_3}, {csr_file_2}, {csr_file_1}, {csr_file_0}};
+      : io_csr_w_addr == 12'h341 ? 2'h2 : {1'h0, io_csr_w_addr == 12'h305};
+  wire        csr_wen = io_csr_r_w_ctrl == 2'h1;
   always @(posedge clock) begin
     if (reset) begin
       csr_file_0 <= 32'h1800;
@@ -27,26 +44,25 @@ module CSRs(
       csr_file_3 <= 32'h0;
     end
     else begin
-      automatic logic             csr_wen = io_csr_r_w_ctrl == 2'h1;
-      automatic logic [3:0][31:0] _GEN_0 =
-        {{{28'h8, csr_file_0[7], csr_file_0[2:0]}},
-         {{25'h30, csr_file_0[6:0]}},
-         {addr_map == 2'h0 ? io_csr_w_data : csr_file_0},
-         {csr_file_0}};
-      csr_file_0 <= _GEN_0[io_csr_r_w_ctrl];
-      if (csr_wen & addr_map == 2'h1)
-        csr_file_1 <= io_csr_w_data;
       if (csr_wen) begin
-        if (addr_map == 2'h2)
+        if (addr_w_map == 2'h0)
+          csr_file_0 <= io_csr_w_data;
+        if (addr_w_map == 2'h2)
           csr_file_2 <= io_csr_w_data;
-        if (&addr_map)
+        if (&addr_w_map)
           csr_file_3 <= io_csr_w_data;
       end
       else if (io_csr_r_w_ctrl == 2'h2) begin
+        csr_file_0 <= {25'h30, csr_file_0[6:0]};
         csr_file_2 <= io_pc;
         csr_file_3 <= 32'hB;
       end
+      else if ((&io_csr_r_w_ctrl) & ~csr_mret_wen_reg0)
+        csr_file_0 <= {28'h8, csr_file_0[7], csr_file_0[2:0]};
+      if (csr_wen & addr_w_map == 2'h1)
+        csr_file_1 <= io_csr_w_data;
     end
+    csr_mret_wen_reg0 <= &io_csr_r_w_ctrl;
   end // always @(posedge)
   csr_display #(
     .CSR_NUM(4),
@@ -54,7 +70,7 @@ module CSRs(
   ) csr_display (
     .csrfile ({csr_file_3, csr_file_2, csr_file_1, csr_file_0})
   );
-  assign io_csr_r_data = _GEN[addr_map];
+  assign io_csr_r_data = casez_tmp;
   assign io_csr_pc =
     io_csr_r_w_ctrl == 2'h2 ? csr_file_1 : (&io_csr_r_w_ctrl) ? csr_file_2 : 32'h0;
 endmodule
