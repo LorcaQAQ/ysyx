@@ -92,6 +92,7 @@ class Core extends Module {
       })
   
   val ifu = Module(new IFU)
+  val imem = Module(new IMEM)
   val idu = Module(new IDU)
   val exu = Module(new EXU)
   val regs = Module(new Reg_CSR(32,4))
@@ -99,6 +100,8 @@ class Core extends Module {
   val get_instruction = Module(new get_instruction)
 
   ifu.io.out <> idu.io.in_from_ifu
+  ifu.io.out_ifu_to_imem <> imem.io.in_from_ifu
+  imem.io.out_to_ifu <> ifu.io.in_imem_to_ifu
   idu.io.out_to_exu <> exu.io.in_from_idu
   idu.io.out_to_regfile <> regs.io.in_idu_to_regfile
   idu.io.out_to_csr <> regs.io.in_idu_to_csr

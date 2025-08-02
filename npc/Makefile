@@ -116,7 +116,7 @@ run_nvboard: $(BIN)
 #	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 #	@echo "Simulation in verilator."
 #	@echo "Write this Makefile by your self."
-
+$(info CONFIG_ITRACE=$(CONFIG_ITRACE))
 run: $(BIN)
 	$(NPC_EXEC)
 	$(call git_commit, "run RTL") # DO NOT REMOVE THIS LINE!!!

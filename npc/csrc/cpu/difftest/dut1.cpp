@@ -42,7 +42,7 @@ static uint32_t skip_dut_pc = 0;
 // this is used to let ref skip instructions which
 // can not produce consistent behavior with NEMU
 void difftest_skip_ref() {
-  is_skip_ref_reg = true;
+  is_skip_ref = true;
   // If such an instruction is one of the instruction packing in QEMU
   // (see below), we end the process of catching up with QEMU's pc to
   // keep the consistent behavior in our best.
@@ -126,14 +126,15 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
   if (is_skip_ref == true){
     // to skip the checking of an instruction, just copy the reg state to reference design
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
-    is_skip_ref = is_skip_ref_reg ? true :false;
+    // is_skip_ref = is_skip_ref_reg ? true :false;
+    is_skip_ref = false;
     return;
   }
 
-  if (is_skip_ref_reg  == true){
-    is_skip_ref =true;
-    is_skip_ref_reg = false;
-  }
+  // if (is_skip_ref_reg  == true){
+  //   is_skip_ref =true;
+  //   is_skip_ref_reg = false;
+  // }
 
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);

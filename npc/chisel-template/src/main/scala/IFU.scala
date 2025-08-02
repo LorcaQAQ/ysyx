@@ -26,14 +26,51 @@ class instr_fetch extends HasBlackBoxInline {
     |
     |always @(pc or reset) begin
     |  if(reset) begin
-    |    instr = 0;
+    |    instr <= 0;
     |  end
     |  else begin
-    |   instr = pmem_read(pc);
+    |   instr <= pmem_read(pc);
     |  end
     |end
     |endmodule
     """.stripMargin)
+}
+
+class IMEM extends Module {
+  val io = IO(new Bundle {
+    val in_from_ifu = Flipped(Decoupled(new ifu_to_imem))
+    val out_to_ifu = Decoupled(new imem_to_ifu)
+  })
+  val imem = Module(new instr_fetch)
+  val pc = RegInit("h80000000".U(32.W))
+
+  pc := Mux(io.in_from_ifu.valid && io.in_from_ifu.ready, io.in_from_ifu.bits.pc, pc)
+  io.in_from_ifu.ready := true.B
+  imem.io.pc := pc
+  imem.io.reset := reset
+  
+  val valid_to_ifu = RegInit(false.B)
+  val s_idle :: s_wait_ready :: Nil = Enum(2)
+  val state = RegInit(s_idle)
+  state := MuxLookup(state, s_idle)(List(
+    s_idle       -> Mux(valid_to_ifu, s_wait_ready, s_idle),
+    s_wait_ready -> Mux(io.out_to_ifu.ready, s_idle, s_wait_ready)
+  ))
+  valid_to_ifu := Mux(io.out_to_ifu.ready && state === s_wait_ready, false.B, 
+                 Mux(io.in_from_ifu.valid && !(io.out_to_ifu.ready && state === s_wait_ready), true.B, 
+                 valid_to_ifu))
+  io.out_to_ifu.valid := valid_to_ifu
+  io.out_to_ifu.bits.instr := imem.io.instr
+
+  io.in_from_ifu.ready := true.B
+
+  val instr_fetch = Module(new instr_fetch)
+
+  instr_fetch.io.pc := io.in_from_ifu.bits.pc
+  instr_fetch.io.reset := reset
+
+  io.out_to_ifu.bits.instr := instr_fetch.io.instr
+  io.out_to_ifu.valid := io.in_from_ifu.valid
 }
 
 class IFU extends Module {
@@ -42,57 +79,51 @@ class IFU extends Module {
     // val jump_en = Input(Bool())
     // val out = Decoupled(new ifu_to_idu)
     val in_from_wbu = Flipped(Decoupled(new wbu_to_ifu))
+    val in_imem_to_ifu = Flipped(Decoupled(new imem_to_ifu))
+    val out_ifu_to_imem = Decoupled(new ifu_to_imem)
     val out = Decoupled(new ifu_to_idu)
     val finish = Output(Bool())
     
   })
-  val instr_fetch =Module(new instr_fetch)
 
   val pc = RegInit("h80000000".U(32.W))
   val snpc = WireDefault("h80000000".U(32.W))
-
-
-  val alu_op = io.in_from_wbu.bits.alu_op
-  val jump_op = io.in_from_wbu.bits.jump_op
-  val result = io.in_from_wbu.bits.result
-  val imm = io.in_from_wbu.bits.imm
-  val csr_pc = io.in_from_wbu.bits.csr_pc
   val dnpc = io.in_from_wbu.bits.dnpc
-
-  // val jal_en = jump_op === JUMP || jump_op === JUMP_CSR
-
-  // val branch_en = jump_op === JUMP_COND&&
-  //                   result === 0.U &&
-  //                   ( alu_op ===ALU_BNE  ||   
-  //                     alu_op ===ALU_BGE  ||
-  //                     alu_op ===ALU_BEQ  ||
-  //                     alu_op ===ALU_BGEU ||
-  //                     alu_op ===ALU_BLTU ||
-  //                     alu_op ===ALU_BLT  )
-  // val alu_pc = MuxCase(pc, Array(
-  //   (jump_op === JUMP) -> result,
-  //   (jump_op === NO_JUMP) -> pc,
-  //   (jump_op === JUMP_COND) -> Mux(branch_en , pc+imm, pc),
-  //   (jump_op === JUMP_CSR) -> csr_pc
-  // ))
-  // val jump_en = jal_en || branch_en
   
   pc := Mux(io.in_from_wbu.valid && io.in_from_wbu.ready , dnpc, pc)
 
+  io.out_ifu_to_imem.bits.pc := pc
+
   io.in_from_wbu.ready := true.B
-  instr_fetch.io.pc := pc
-  instr_fetch.io.reset := reset
 
-
-  val valid_to_idu =RegInit(true.B)
+  //TO IMEM
+  val valid_to_imem = RegInit(true.B)
   val s_idle :: s_wait_ready :: Nil = Enum(2)
+  val state_imem = RegInit(s_idle)
+  state_imem := MuxLookup(state_imem, s_idle)(List(
+    s_idle       -> Mux(valid_to_imem, s_wait_ready, s_idle),
+    s_wait_ready -> Mux(io.out_ifu_to_imem.ready, s_idle, s_wait_ready)
+  ))
+  
+  valid_to_imem := Mux(io.out_ifu_to_imem.ready && state_imem === s_wait_ready, false.B, 
+                 Mux(io.in_from_wbu.valid && !(io.out_ifu_to_imem.ready && state_imem === s_wait_ready), true.B, 
+                 valid_to_imem))
+  io.out_ifu_to_imem.valid := valid_to_imem
+  io.in_imem_to_ifu.ready := true.B
+
+  val instr = RegInit(0.U(32.W))
+  instr := Mux(io.in_imem_to_ifu.valid && io.in_imem_to_ifu.ready, io.in_imem_to_ifu.bits.instr, instr)
+
+  //TO IDU
+  val valid_to_idu =RegInit(false.B)
+  // val s_idle :: s_wait_ready :: Nil = Enum(2)
   val state = RegInit(s_idle)
   state := MuxLookup(state, s_idle)(List(
     s_idle       -> Mux(valid_to_idu, s_wait_ready, s_idle),
     s_wait_ready -> Mux(io.out.ready, s_idle, s_wait_ready)
   ))
   valid_to_idu := Mux(io.out.ready && state === s_wait_ready, false.B, 
-                 Mux(io.in_from_wbu.valid && !(io.out.ready && state === s_wait_ready), true.B, 
+                 Mux(io.in_imem_to_ifu.valid && !(io.in_imem_to_ifu.ready && state === s_wait_ready), true.B, 
                  valid_to_idu))
 
   io.out.valid := valid_to_idu
@@ -118,13 +149,11 @@ when(io.finish === true.B) {
 
 io.finish := finishReg
 
-  // val instr = RegEnable(instr_fetch.io.instr, instr, io.out.ready && io.out.valid)
-  val instr = instr_fetch.io.instr
 
-  snpc := pc + 4.U(32.W)
-  io.out.bits.instr :=instr
-  io.out.bits.snpc :=snpc
-  io.out.bits.pc :=pc
+snpc := pc + 4.U(32.W)
+io.out.bits.instr :=instr
+io.out.bits.snpc :=snpc
+io.out.bits.pc :=pc
 
 }
 /**

@@ -101,3 +101,10 @@ class wbu_to_ifu extends Bundle {
   val csr_pc = Output(UInt(32.W))
   val dnpc = Output(UInt(32.W))
 }
+class ifu_to_imem extends Bundle {
+  val pc = Output(UInt(32.W))
+}
+
+class imem_to_ifu extends Bundle {
+  val instr = Output(UInt(32.W))
+}

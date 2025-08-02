@@ -12,6 +12,7 @@
 !README.md
 build/
 vsrc_*/
+vsrc/
 !Kconfig
 include/config
 include/generated

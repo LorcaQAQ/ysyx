@@ -261,7 +261,7 @@ void execute(uint32_t n)
     #ifdef CONFIG_ITRACE_COND 
     write_RingBuffer(buffer, s.logbuf);
     #endif
-    trace_and_difftest(&s, top->io_pc);
+    trace_and_difftest(&s, s.dnpc);
 #ifdef CONFIG_FTRACE
     fun_hierachy = display_ftrace(s, fun_hierachy);
 #endif
