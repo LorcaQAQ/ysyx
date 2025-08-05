@@ -96,7 +96,9 @@ class Core extends Module {
   val idu = Module(new IDU)
   val exu = Module(new EXU)
   val regs = Module(new Reg_CSR(32,4))
-  val mem = Module(new mem_wrapper)
+  val lsu = Module(new LSU)
+  val mem_slaver = Module(new MEM_SLAVER)
+  val mem = Module(new MEM(32,10))
   val get_instruction = Module(new get_instruction)
 
   ifu.io.out <> idu.io.in_from_ifu
@@ -107,8 +109,28 @@ class Core extends Module {
   idu.io.out_to_csr <> regs.io.in_idu_to_csr
   exu.io.in_from_regfile <> regs.io.out_regfile_to_exu
   exu.io.in_from_csr <> regs.io.out_csr_to_exu
-  exu.io.out<> mem.io.in_from_exu
-  mem.io.out <> regs.io.in_from_mem
+  exu.io.out<> lsu.io.in_from_exu
+  lsu.io.r<>mem_slaver.io.r
+  lsu.io.ar<>mem_slaver.io.ar
+  lsu.io.aw<>mem_slaver.io.aw
+  lsu.io.w<>mem_slaver.io.w
+  lsu.io.b<>mem_slaver.io.b
+
+  mem_slaver.io.mem_ren <> mem.io.mem_ren
+  mem_slaver.io.mem_raddr <> mem.io.mem_raddr
+  mem_slaver.io.mem_rdata_valid <> mem.io.mem_rdata_valid
+  mem_slaver.io.mem_rdata <> mem.io.mem_rdata
+
+  mem_slaver.io.mem_wen <> mem.io.mem_wen
+  mem_slaver.io.mem_waddr <> mem.io.mem_waddr
+  mem_slaver.io.mem_wdata <> mem.io.mem_wdata
+  mem_slaver.io.mem_wstrb <> mem.io.mem_wstrb
+  mem_slaver.io.mem_write_finished <> mem.io.mem_write_finished
+
+  mem.io.clk := clock
+  mem.io.reset := reset
+
+  lsu.io.out <> regs.io.in_from_mem
   regs.io.out_to_ifu <> ifu.io.in_from_wbu
 
   get_instruction.io.instr := Mux(ifu.io.finish, ifu.io.out.bits.instr, 0.U)

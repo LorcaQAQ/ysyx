@@ -108,3 +108,4 @@ class ifu_to_imem extends Bundle {
 class imem_to_ifu extends Bundle {
   val instr = Output(UInt(32.W))
 }
+
