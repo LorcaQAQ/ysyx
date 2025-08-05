@@ -11,6 +11,7 @@ import consts.Consts._
 import iobundle._
 import axi_io._
 import axi_io.AXI_Consts._
+import lfsr._
 
 class MEM (data_width:Int, delay: Int) extends BlackBox (Map(
    "DATA_WIDTH" -> data_width,
@@ -162,7 +163,7 @@ class MEM_SLAVER extends Module{
     r_data := io.mem_rdata
     r_response := RRESP_OK
     r_valid := true.B
-  }.elsewhen(r_state === s_wait_rdata && r_valid && r_ready) {
+  }.elsewhen( r_valid && r_ready) {
     r_data := 0.U
     r_valid := false.B
   }
@@ -267,12 +268,14 @@ class LSU extends Module {
 
   val valid_to_wbu = RegInit(false.B)
   val s_idle :: s_wait_ready :: Nil = Enum(2)
-  val state = RegInit(s_idle)
-  state := MuxLookup(state, s_idle)(List(
+  
+  val to_wbu_state = RegInit(s_idle)
+  to_wbu_state := MuxLookup(to_wbu_state, s_idle)(List(
     s_idle       -> Mux(valid_to_wbu, s_wait_ready, s_idle),
     s_wait_ready -> Mux(io.out.ready, s_idle, s_wait_ready)
   ))
-  
+   
+
 
   val result = RegInit(0.U(32.W))
  
@@ -319,17 +322,65 @@ class LSU extends Module {
   val ar_addr = RegInit(0.U(32.W))
   //--Part for read address
   ar_ready := io.ar.ready
+  
+  val ar_valid_buffer= RegNext(ar_valid)
+
+  //random delay part
+  val lfsr= Module(new LFSR(5))
+  val lfsr_enable =ar_valid  && !ar_valid_buffer
+  lfsr.io.enable := lfsr_enable
+  val delay = lfsr.io.out
+  val random_send_delay_enable = RegInit(false.B)
+  val aw_delay_cnt= RegInit(0.U(5.W))
+  val to_mem_state = RegInit(s_idle)
+  to_mem_state := MuxLookup(to_mem_state, s_idle)(List(
+    s_idle       -> Mux(io.in_from_exu.valid && ready_to_exu, s_wait_ready, s_idle),
+    s_wait_ready -> Mux(random_send_delay_enable, s_idle, s_wait_ready)
+  ))
+
+  when(aw_delay_cnt === delay ) {
+    random_send_delay_enable:=true.B
+    aw_delay_cnt:=0.U
+  }.elsewhen(to_mem_state === s_wait_ready && (io.in_from_exu.bits.mem_ren||io.in_from_exu.bits.mem_wen)) {
+    aw_delay_cnt:=aw_delay_cnt+1.U
+  }.elsewhen(random_send_delay_enable) {
+    random_send_delay_enable:=false.B
+  }
+
+  val to_resp_state = RegInit(s_idle)
+  val random_resp_delay_enable = RegInit(false.B)
+  to_resp_state := MuxLookup(to_resp_state, s_idle)(List(
+    s_idle       -> Mux(io.r.valid || io.b.valid, s_wait_ready, s_idle),
+    s_wait_ready -> Mux(random_resp_delay_enable, s_idle, s_wait_ready)
+  ))
+  val resp_delay_cnt = RegInit(0.U(5.W))
+
+  when(resp_delay_cnt === delay ) {
+    random_resp_delay_enable:=true.B
+    resp_delay_cnt:=0.U
+  }.elsewhen(to_resp_state === s_wait_ready && (io.in_from_exu.bits.mem_ren||io.in_from_exu.bits.mem_wen)) {
+    resp_delay_cnt:=resp_delay_cnt+1.U
+  }.elsewhen(random_resp_delay_enable){
+    random_resp_delay_enable:=false.B
+  }
+
+
+  when(ar_valid === true.B && ar_ready === true.B) {
+    ar_valid := false.B
+  } .elsewhen(to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_ren && random_send_delay_enable) {
+    ar_valid := true.B
+  }
 
   ar_valid := MuxCase(ar_valid, Array(
     (ar_valid === true.B && ar_ready === true.B) -> false.B,
-    (io.in_from_exu.valid && ready_to_exu && io.in_from_exu.bits.mem_ren) -> true.B,
+    (to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_ren && random_send_delay_enable) -> true.B,
 
   ))
 
   ar_addr := MuxCase(ar_addr, Array(
     (ar_valid === true.B && ar_ready === true.B) -> 0.U(32.W),
     (ar_valid === true.B && ar_ready === false.B) -> ar_addr,
-    (io.in_from_exu.valid && ready_to_exu && io.in_from_exu.bits.mem_ren) -> io.in_from_exu.bits.result,
+    (to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_ren && random_send_delay_enable) -> io.in_from_exu.bits.result,
   ))
 
 
@@ -339,7 +390,7 @@ class LSU extends Module {
 
   // -----AXI part: Read data------
   val r_valid = io.r.valid
-  val r_ready = true.B 
+  val r_ready = RegInit(true.B)
   val r_response = io.r.bits.rresp
   val r_data_valid = WireDefault(false.B)
   r_data_valid := r_valid && r_ready && (r_response === RRESP_OK)
@@ -352,6 +403,15 @@ class LSU extends Module {
     (BYTE_S) -> Cat(Fill(24, io.r.bits.rdata(7)), io.r.bits.rdata(7, 0))
   )), r_data)
 
+  when(r_valid && r_ready) {
+    r_ready := false.B
+  }.elsewhen(random_resp_delay_enable) {
+    r_ready := true.B
+  }
+  // }.elsewhen(to_wbu_state === s_wait_ready && io.out.ready) {
+  //   r_ready := true.B
+  // }
+
   io.r.ready := r_ready
 
   // -----AXI part: Address write------
@@ -362,14 +422,14 @@ class LSU extends Module {
 
   aw_valid := MuxCase(aw_valid, Array(
     (aw_valid === true.B && aw_ready === true.B) -> false.B,
-    (io.in_from_exu.valid && ready_to_exu && io.in_from_exu.bits.mem_wen) -> true.B,
+    (to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_wen&& random_send_delay_enable) -> true.B,
   ))
 
 
   aw_addr := MuxCase(aw_addr, Array(
     (aw_valid === true.B && aw_ready === true.B) -> 0.U(32.W),
     (aw_valid === true.B && aw_ready === false.B) -> aw_addr,
-    (io.in_from_exu.valid && ready_to_exu && io.in_from_exu.bits.mem_wen) -> io.in_from_exu.bits.result,
+    (to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_wen&& random_send_delay_enable) -> io.in_from_exu.bits.result,
   ))
   io.aw.bits.awport := DATA_PORT
   io.aw.bits.awaddr := aw_addr
@@ -384,13 +444,13 @@ class LSU extends Module {
 
   w_valid := MuxCase(w_valid, Array(
     (w_valid === true.B && w_ready === true.B) -> false.B,
-    (io.in_from_exu.valid && ready_to_exu && io.in_from_exu.bits.mem_wen) -> true.B,
+    (to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_wen&& random_send_delay_enable) -> true.B,
   ))
 
   w_data := MuxCase(w_data, Array(
     (w_valid === true.B && w_ready === true.B) -> 0.U(32.W),
     (w_valid === true.B && w_ready === false.B) -> w_data,
-    (io.in_from_exu.valid && ready_to_exu && io.in_from_exu.bits.mem_wen) -> io.in_from_exu.bits.rs2
+    (to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_wen&& random_send_delay_enable) -> io.in_from_exu.bits.rs2
   ))
   val mask = WireDefault(0.U(4.W))
   mask := MuxLookup(io.in_from_exu.bits.load_store_range, "hf".U) (List(
@@ -399,15 +459,10 @@ class LSU extends Module {
     (BYTE_U) -> "h1".U
   ))
     
-  //   MuxCase(0.U, Array(
-  //   (io.in_from_exu.bits.load_store_range === Word) -> "hf".U,
-  //   (io.in_from_exu.bits.load_store_range === Half_U) -> "h3".U,
-  //   (io.in_from_exu.bits.load_store_range === Half_U) -> "h1".U
-  // ))
   w_strb := MuxCase(w_strb, Array(
     (w_valid === true.B && w_ready === true.B) -> 0.U(4.W),
     (w_valid === true.B && w_ready === false.B) -> w_strb,
-    (io.in_from_exu.valid && ready_to_exu && io.in_from_exu.bits.mem_wen) -> mask
+    (to_mem_state === s_wait_ready && io.in_from_exu.bits.mem_wen) -> mask
   ))
 
   io.w.bits.wdata := w_data
@@ -416,7 +471,7 @@ class LSU extends Module {
 
   // -----AXI part: Write response------
   val b_valid = io.b.valid
-  val b_ready = true.B //TODO: should be controlled by the FSM
+  val b_ready = RegInit(true.B)
   val b_response = io.b.bits.bresp
 
   io.write_err := b_response =/= RRESP_OK
@@ -425,8 +480,16 @@ class LSU extends Module {
     (r_valid && r_ready) -> true.B,
     (b_valid && b_ready) -> true.B,
     ((io.in_from_exu.valid === true.B && ready_to_exu) &&(!io.in_from_exu.bits.mem_wen && !io.in_from_exu.bits.mem_ren)) -> true.B,
-    (state === s_wait_ready && io.out.ready) -> false.B
+    (to_wbu_state === s_wait_ready && io.out.ready) -> false.B
   ))
+
+  when(b_valid && b_ready) {
+    b_ready := false.B
+  }.elsewhen(random_resp_delay_enable) {
+    b_ready := true.B
+  }
+  // .elsewhen(to_wbu_state === s_wait_ready && io.out.ready) {
+  //   b_ready := true.B
   io.b.ready := b_ready
   
 
